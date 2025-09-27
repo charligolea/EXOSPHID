@@ -11,17 +11,17 @@ struct PhotoReaction
     E_ionisation_eV::Float64 # Ionisation threshold energy in eV
     parent_velocity::Union{Tuple{Float64, Float64, Float64}, Float64} # Velocity of the parent molecule in m/s (H2O, OH, H2) -> USER INPUT
     sun_tuple::Union{Tuple{Float64, Float64, Float64}, Nothing}
-    parameters::Union{Dict, Nothing} # Dict containing keys: "time_step" (Float64) in s, "max_time" (Float64) in s
     wvl_range::Union{Vector{Float64}, Nothing} # Contains photon wavelength for specified range. Not necessary if just running simple_photodissociation / simple_ionisation function
     energy_vector::Union{Vector{Float64}, Nothing} # Contains photon energies for specified range. Not necessary if just running simple_photodissociation / simple_ionisation function
     product_names::Union{Tuple{String, String, String}, Nothing} # USER INPUT -> Dict containing all involved species names. Must contain 3 keys: "parent_name", "heavy_child_name", "light_child_name""
     product_types::Union{Tuple{String, String, String}, Nothing}
     E_ionisation::Float64  # CALCULATED -> Ionisation energy in J
+    display_info::Bool # Set true if you want to print photoproduct velocity analysis at the end
 
-    function PhotoReaction(E_ionisation_eV, parent_velocity, sun_tuple, parameters, wvl_range, energy_vector, product_names)
+    function PhotoReaction(E_ionisation_eV, parent_velocity, sun_tuple, wvl_range, energy_vector, product_names, display_info)
         E_ionisation = E_ionisation_eV * 1.602e-19
         product_types = map(s -> replace(s, r"\(.*\)" => ""),product_names)
-        new(E_ionisation_eV, parent_velocity, sun_tuple, parameters, wvl_range, energy_vector, product_names, product_types, E_ionisation)
+        new(E_ionisation_eV, parent_velocity, sun_tuple, wvl_range, energy_vector, product_names, product_types, E_ionisation, display_info)
     end
 end
 
@@ -126,7 +126,7 @@ function multiple_photoionisation(reaction::PhotoReaction)
     final_speeds_ion_norm = [norm(p) for p in final_speeds_ion]
 
     # 4. Show mean, STD and median speeds for product ions
-    if reaction.parameters["display_info"]
+    if reaction.display_info
         data_speeds = DataFrame(
         Product = [reaction.product_names[1]],
         Mean_Speed = [mean(final_speeds_ion_norm)],

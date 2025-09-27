@@ -75,10 +75,7 @@ function photodestruction(solar_activity::Float64, dt::Union{Float64, Int64}, pa
     - solar_activity = Float from 0.0 (Quiet Sun) to 1.0 (Active Sun)
     - dt: analyzed simulation time window
     - parent_type:: String with parent molecule type ("H2O", "OH", "H2", "H", "H(-)", "HO2", "H2O2")
-    - parent_velocity:: Tuple{Float64, Float64, Float64} or Float64, Parent velocity vector in m/s
-    - parent_position:: Tuple{Float64, Float64, Float64} or Float64, Initial particle height in meters
-    EXPAND FOR SUN VECTOR?
-    
+    - parent_velocity:: Tuple{Float64, Float64, Float64} or Float64, Parent velocity vector in m/s    
     
     OUTPUTS:
     - reaction_occurence::Boolean
@@ -329,7 +326,7 @@ function photodestruction(solar_activity::Float64, dt::Union{Float64, Int64}, pa
                         if present_reaction == "SPD"
 
                             if (photon_energy/1.602e-19 >= tsh_energies[reaction_index]) # To avoid problems with H2O-PD2
-                                reaction = SimplePhotodissociation.PhotoReaction(tsh_energies[reaction_index], parent_velocity, sun_tuple, nothing, nothing, nothing, species_names[reaction_index])
+                                reaction = SimplePhotodissociation.PhotoReaction(tsh_energies[reaction_index], parent_velocity, sun_tuple, nothing, nothing, species_names[reaction_index], false)
                                 final_speeds_light, final_speeds_heavy = SimplePhotodissociation.simulate_photodissociation(reaction, photon_energy)
                                 product_types = [product_names[2], product_names[3]]
                                 product_velocities = [final_speeds_heavy, final_speeds_light]
@@ -338,10 +335,10 @@ function photodestruction(solar_activity::Float64, dt::Union{Float64, Int64}, pa
                         # H2O Double photodissociation
                         elseif present_reaction == "DPD"
 
-                            reaction = SimplePhotodissociation.PhotoReaction(tsh_energies[reaction_index][1], parent_velocity, sun_tuple, nothing, nothing, nothing, species_names[reaction_index][1])
+                            reaction = SimplePhotodissociation.PhotoReaction(tsh_energies[reaction_index][1], parent_velocity, sun_tuple, nothing, nothing, species_names[reaction_index][1], false)
                             final_speeds_Hf, final_speeds_OH = SimplePhotodissociation.simulate_photodissociation(reaction, photon_energy)
 
-                            reaction = SimplePhotodissociation.PhotoReaction(tsh_energies[reaction_index][2], final_speeds_OH[end], sun_tuple, nothing, nothing, nothing, species_names[reaction_index][2])
+                            reaction = SimplePhotodissociation.PhotoReaction(tsh_energies[reaction_index][2], final_speeds_OH[end], sun_tuple, nothing, nothing, species_names[reaction_index][2], false)
                             final_speeds_Hs, final_speeds_O = SimplePhotodissociation.simulate_photodissociation(reaction, photon_energy)
                             
                             product_types = ["O", "H", "H"]
@@ -350,10 +347,10 @@ function photodestruction(solar_activity::Float64, dt::Union{Float64, Int64}, pa
                         # Double electron ejection of negative atomic hydrogen, equivalente to a double photoionization process
                         elseif present_reaction == "DPI"
 
-                            reaction = SimplePhotoionisation.PhotoReaction(tsh_energies[1], parent_velocity, sun_tuple, nothing, nothing, nothing, species_names[reaction_index])
+                            reaction = SimplePhotoionisation.PhotoReaction(tsh_energies[1], parent_velocity, sun_tuple, nothing, nothing, species_names[reaction_index], false)
                             final_speeds_H = SimplePhotoionisation.simulate_photoionisation(reaction, photon_energy)
 
-                            reaction = SimplePhotoionisation.PhotoReaction(tsh_energies[2], final_speeds_H[end], sun_tuple, nothing, nothing, nothing, species_names[reaction_index])
+                            reaction = SimplePhotoionisation.PhotoReaction(tsh_energies[2], final_speeds_H[end], sun_tuple, nothing, nothing, species_names[reaction_index], false)
                             final_speeds_Hion = SimplePhotoionisation.simulate_photoionisation(reaction, photon_energy)
                             
                             product_types = ["H(+)"]
@@ -362,7 +359,7 @@ function photodestruction(solar_activity::Float64, dt::Union{Float64, Int64}, pa
                         # Simple photoionisations
                         elseif present_reaction == "SPI"
 
-                            reaction = SimplePhotoionisation.PhotoReaction(tsh_energies[reaction_index], parent_velocity, sun_tuple, nothing, nothing, nothing, species_names[reaction_index])
+                            reaction = SimplePhotoionisation.PhotoReaction(tsh_energies[reaction_index], parent_velocity, sun_tuple, nothing, nothing, species_names[reaction_index], false)
                             final_speeds_ion = SimplePhotoionisation.simulate_photoionisation(reaction, photon_energy)
                             product_types = [product_names[2]]
                             product_velocities = [final_speeds_ion]
@@ -370,7 +367,7 @@ function photodestruction(solar_activity::Float64, dt::Union{Float64, Int64}, pa
                         # Dissociative photoionisations
                         elseif present_reaction == "DiPI"
 
-                            reaction = DissociativePhotoionisation.PhotoReaction(tsh_energies[reaction_index][2], tsh_energies[reaction_index][1], parent_velocity, sun_tuple, nothing, nothing, nothing, product_names)
+                            reaction = DissociativePhotoionisation.PhotoReaction(tsh_energies[reaction_index][2], tsh_energies[reaction_index][1], parent_velocity, sun_tuple, nothing, nothing, product_names, false)
                             final_speeds_light, final_speeds_heavy = DissociativePhotoionisation.simulate_photoionisation(reaction, photon_energy)
                             product_velocities = [final_speeds_heavy, final_speeds_light]
                             product_types = [product_names[2], product_names[3]]

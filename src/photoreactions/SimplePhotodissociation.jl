@@ -10,17 +10,17 @@ struct PhotoReaction
     E_bond_eV::Float64 # Threshold energy for given photodissociation reaction in eV -> USER INPUT
     parent_velocity::Union{Tuple{Float64, Float64, Float64}, Float64} # Velocity of the parent molecule in m/s (H2O, OH, H2) -> USER INPUT
     sun_tuple::Union{Tuple{Float64, Float64, Float64}, Nothing} # 
-    parameters::Union{Dict, Nothing} # USER INPUT -> Dict containing keys: "time_step" (Float64) in s, "max_time" (Float64) in s
     wvl_range::Union{Vector{Float64}, Nothing} # Contains photon wavelength for specified range. Not necessary if just running simple_photodissociation / simple_ionisation function
     energy_vector::Union{Vector{Float64}, Nothing} # Contains photon energies for specified range. Not necessary if just running simple_photodissociation / simple_ionisation function
     product_names::Union{Tuple{String, String, String}, Nothing} # USER INPUT -> Dict containing all involved species names. Must contain 3 keys: "parent_name", "heavy_child_name", "light_child_name""
     product_types::Union{Tuple{String, String, String}, Nothing}
     E_bond::Float64 # CALCULATED -> Photon Energy in J
+    display_info::Bool # Set true if you want to print photoproduct velocity analysis at the end
 
-    function PhotoReaction(E_bond_eV, parent_velocity, sun_tuple, parameters, wvl_range, energy_vector, product_names)
+    function PhotoReaction(E_bond_eV, parent_velocity, sun_tuple, wvl_range, energy_vector, product_names, display_info)
         E_bond = E_bond_eV * 1.602e-19
         product_types = map(s -> replace(s, r"\(.*\)" => ""),product_names)
-        new(E_bond_eV, parent_velocity, sun_tuple, parameters, wvl_range, energy_vector, product_names, product_types, E_bond)
+        new(E_bond_eV, parent_velocity, sun_tuple, wvl_range, energy_vector, product_names, product_types, E_bond, display_info)
     end
 end
 
@@ -185,7 +185,7 @@ function multiple_photodissociation(reaction::PhotoReaction)
 
     # 4. Show mean, STD and median speeds for photo products
 
-    if reaction.parameters["display_info"]
+    if reaction.display_info
         data_speeds = DataFrame(
         Product = [reaction.product_names[2], reaction.product_names[3]],
         Mean_Speed = [mean(final_speeds_heavy_norms), mean(final_speeds_light_norms)],
