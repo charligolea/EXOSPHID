@@ -375,8 +375,10 @@ function photodestruction(solar_activity::Float64, dt::Union{Float64, Int64}, pa
 
                             reaction = SimplePhotoionisation.PhotoReaction(tsh_energies[reaction_index][1], parent_velocity, sun_tuple, nothing, nothing, species_names[reaction_index][1], false)
                             final_speeds_ion = SimplePhotoionisation.simulate_photoionisation(reaction, photon_energy)
+
+                            product_names = map(s -> replace(s, r"\(\+\)" => ""), species_names[reaction_index][2])
                             
-                            reaction = SimplePhotodissociation.PhotoReaction(tsh_energies[reaction_index][2], final_speeds_ion[end], sun_tuple, nothing, nothing, species_names[reaction_index][2], false)
+                            reaction = SimplePhotodissociation.PhotoReaction(tsh_energies[reaction_index][2], final_speeds_ion[end], sun_tuple, nothing, nothing, product_names, false)
                             final_speeds_light, final_speeds_heavy = SimplePhotodissociation.simulate_photodissociation(reaction, photon_energy)
                             
                             product_velocities = [final_speeds_heavy, final_speeds_light]
