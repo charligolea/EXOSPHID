@@ -8,9 +8,6 @@ using .SimplePhotodissociation
 include("photoreactions/SimplePhotoionisation.jl")
 using .SimplePhotoionisation
 
-include("photoreactions/DissociativePhotoionisation.jl")
-using .DissociativePhotoionisation
-
 include("solar_spectrum.jl")
 using .solar_spectrum
 
@@ -29,8 +26,8 @@ function get_photodestruction_rates_and_lifetimes(species::String, solar_activit
     active_rate = 0.0
 
     if species == "H2O"
-        quiet_rate = 13.23e-6   # Gomez de Olea (2025)
-        active_rate = 22.21e-6
+        quiet_rate = 12.94e-6   # Gomez de Olea (2026)
+        active_rate = 22.25e-6
     elseif species == "OH"
         quiet_rate = 22.45e-6   # Gomez de Olea (2025)
         active_rate = 32.56e-6
@@ -119,7 +116,7 @@ function photodestruction(solar_activity::Float64, dt::Union{Float64, Int64}, pa
                         5.113 , # "H2O + γ -> OH(X2π) + H"
                         7.05, # "H2O + γ -> O + H2"
                         9.12, # "H2O + γ -> OH(A2Σ+) + H"
-                        [9.12, 9.54], # "H2O + γ -> O + H + H"
+                        (9.12, 9.54), # "H2O + γ -> O + H + H"
                         12.60, # " H2O + γ -> H2O(+) + e-"
                         (12.60, 18.11), # " H2O + γ -> H + OH(+) + e-" (The first is the ionisation energy, the second is the total dissociative ionisation energy)
                         (12.60, 18.65), # " H2O + γ -> H2 + O(+) + e-" (The first is the ionisation energy, the second is the total dissociative ionisation energy)
@@ -131,9 +128,9 @@ function photodestruction(solar_activity::Float64, dt::Union{Float64, Int64}, pa
                         ("H2O", "OH(A2Σ+)", "H"), # "H2O + γ -> OH(A2Σ+) + H"
                         (("H2O", "OH(A2Σ+)", "H"), ("OH(A2Σ+)", "O", "H")),          # "H2O + γ -> O + H + H"
                         ("H2O", "H2O(+)", "e(-)"),     # " H2O + γ -> H2O(+) + e-"
-                        ("H2O", "OH(+)", "H"),  # " H2O + γ -> H + OH(+) + e-"
-                        ("H2O", "O(+)", "H2"),  # " H2O + γ -> H2 + O(+) + e-"
-                        ("H2O", "OH", "H(+)")   # " H2O + γ -> H(+) + OH + e-"
+                        (("H2O", "H2O(+)", "e(-)"), ("H2O(+)", "OH(+)", "H")),  # " H2O + γ -> H + OH(+) + e-"
+                        (("H2O", "H2O(+)", "e(-)"), ("H2O(+)", "O(+)", "H2")),  # " H2O + γ -> H2 + O(+) + e-"
+                        (("H2O", "H2O(+)", "e(-)"), ("H2O(+)", "OH", "H(+)"))   # " H2O + γ -> H(+) + OH + e-"
                     )
                     reaction_probabilities = (
                         (0.99, 0.70, 0.70, 0.00, 0.00, 0.00),  # "H2O + γ -> OH(X2π) + H"
@@ -228,7 +225,7 @@ function photodestruction(solar_activity::Float64, dt::Union{Float64, Int64}, pa
                         ("H2", "H", "H"), # " H2 -> H(1S) + H(1S)"
                         ("H2", "H", "H"), # " H2 -> H(2S,2P) + H(2S,2P)"
                         ("H2", "H2(+)", "e(-)"),   # " H2 -> H2(+) + e-"
-                        ("H2", "H(+)", "H")  # " H2 -> H(+) + H + e-" (The first is the ionisation energy, the second is the total dissociative ionisation energy)
+                        (("H2", "H2(+)", "e(-)"), ("H2(+)", "H(+)", "H"))  # " H2 -> H(+) + H + e-" (The first is the ionisation energy, the second is the total dissociative ionisation energy)
                     )
                     reaction_probabilities = (
                         (1.00, 0.00, 0.00, 0.00), # " H2 -> H(1S) + H(1S)"
@@ -260,17 +257,23 @@ function photodestruction(solar_activity::Float64, dt::Union{Float64, Int64}, pa
                 
                 elseif parent_type == "H(-)"
                     tsh_energies = (0.75,  # "H(-) -> H + e-"
-                                    14.63) # "H(-) -> H(+) + 2e-"
+                                    (0.75, 14.63) # "H(-) -> H(+) + 2e-"
+                                    ) 
                     species_names = (("H(-)", "H", "e(-)"),
-                                     ("", "", ""))
+                                     (("H(-)", "H", "e(-)"), ("H", "H(+)", "e(-)"))
+                                     )
                     reaction_probabilities = ((1.00, 0.99),
-                                              (0.00, 0.01))
+                                              (0.00, 0.01)
+                                              )
                     reaction_names = ("H(-)-PI1",
-                                      "H(-)-PI2")
+                                      "H(-)-PI2"
+                                      )
                     reaction_types = ("SPI",
-                                      "DPI") # Double photoionization
+                                      "DPI" # Double photoionization
+                                      ) 
                     wavelength_range = ((847.36, 16439.0), #Lykke et al 1992 and  Huebner 2015
-                                        (0, 847.36)) 
+                                        (0, 847.36)
+                                        ) 
 
                 
                 elseif parent_type == "HO2"
@@ -320,10 +323,11 @@ function photodestruction(solar_activity::Float64, dt::Union{Float64, Int64}, pa
 
                         present_reaction = reaction_types[reaction_index]
                         reaction_name = reaction_names[reaction_index]
-                        product_names = map(s -> replace(s, r"\((?!\+).*?\)" => ""), species_names[reaction_index])
 
                         # Simple photodissociations
                         if present_reaction == "SPD"
+
+                            product_names = map(s -> replace(s, r"\((?!\+).*?\)" => ""), species_names[reaction_index])
 
                             if (photon_energy/1.602e-19 >= tsh_energies[reaction_index]) # To avoid problems with H2O-PD2
                                 reaction = SimplePhotodissociation.PhotoReaction(tsh_energies[reaction_index], parent_velocity, sun_tuple, nothing, nothing, species_names[reaction_index], false)
@@ -334,6 +338,8 @@ function photodestruction(solar_activity::Float64, dt::Union{Float64, Int64}, pa
 
                         # H2O Double photodissociation
                         elseif present_reaction == "DPD"
+
+                            product_names = map(s -> replace(s, r"\((?!\+).*?\)" => ""), species_names[reaction_index])
 
                             reaction = SimplePhotodissociation.PhotoReaction(tsh_energies[reaction_index][1], parent_velocity, sun_tuple, nothing, nothing, species_names[reaction_index][1], false)
                             final_speeds_Hf, final_speeds_OH = SimplePhotodissociation.simulate_photodissociation(reaction, photon_energy)
@@ -347,13 +353,13 @@ function photodestruction(solar_activity::Float64, dt::Union{Float64, Int64}, pa
                         # Double electron ejection of negative atomic hydrogen, equivalente to a double photoionization process
                         elseif present_reaction == "DPI"
 
-                            reaction = SimplePhotoionisation.PhotoReaction(tsh_energies[1], parent_velocity, sun_tuple, nothing, nothing, species_names[reaction_index], false)
+                            reaction = SimplePhotoionisation.PhotoReaction(tsh_energies[reaction_index][1], parent_velocity, sun_tuple, nothing, nothing, species_names[reaction_index][1], false)
                             final_speeds_H = SimplePhotoionisation.simulate_photoionisation(reaction, photon_energy)
 
-                            reaction = SimplePhotoionisation.PhotoReaction(tsh_energies[2], final_speeds_H[end], sun_tuple, nothing, nothing, species_names[reaction_index], false)
+                            reaction = SimplePhotoionisation.PhotoReaction(tsh_energies[reaction_index][2], final_speeds_H[end], sun_tuple, nothing, nothing, species_names[reaction_index][2], false)
                             final_speeds_Hion = SimplePhotoionisation.simulate_photoionisation(reaction, photon_energy)
                             
-                            product_types = ["H(+)"]
+                            product_types = [species_names[reaction_index][2][2]]
                             product_velocities = [final_speeds_Hion]
 
                         # Simple photoionisations
@@ -361,16 +367,20 @@ function photodestruction(solar_activity::Float64, dt::Union{Float64, Int64}, pa
 
                             reaction = SimplePhotoionisation.PhotoReaction(tsh_energies[reaction_index], parent_velocity, sun_tuple, nothing, nothing, species_names[reaction_index], false)
                             final_speeds_ion = SimplePhotoionisation.simulate_photoionisation(reaction, photon_energy)
-                            product_types = [product_names[2]]
+                            product_types = [species_names[reaction_index][2]]
                             product_velocities = [final_speeds_ion]
 
                         # Dissociative photoionisations
                         elseif present_reaction == "DiPI"
 
-                            reaction = DissociativePhotoionisation.PhotoReaction(tsh_energies[reaction_index][2], tsh_energies[reaction_index][1], parent_velocity, sun_tuple, nothing, nothing, product_names, false)
-                            final_speeds_light, final_speeds_heavy = DissociativePhotoionisation.simulate_photoionisation(reaction, photon_energy)
+                            reaction = SimplePhotoionisation.PhotoReaction(tsh_energies[reaction_index][1], parent_velocity, sun_tuple, nothing, nothing, species_names[reaction_index][1], false)
+                            final_speeds_ion = SimplePhotoionisation.simulate_photoionisation(reaction, photon_energy)
+                            
+                            reaction = SimplePhotodissociation.PhotoReaction(tsh_energies[reaction_index][2], final_speeds_ion[end], sun_tuple, nothing, nothing, species_names[reaction_index][2], false)
+                            final_speeds_light, final_speeds_heavy = SimplePhotodissociation.simulate_photodissociation(reaction, photon_energy)
+                            
                             product_velocities = [final_speeds_heavy, final_speeds_light]
-                            product_types = [product_names[2], product_names[3]]
+                            product_types = [species_names[reaction_index][2][2], species_names[reaction_index][2][3]]
                         end
 
                         break
