@@ -82,7 +82,6 @@ function photodestruction(solar_activity::Float64, dt::Union{Float64, Int64}, pa
     """
 
     # Threshold energies are taken from Huebner (2015):
-    # Photodissociation probabilities from Combi (2005. Photoionisation probabilities from (Kronebusch, Berkowitz, 1976)) 
     wvl_thresholds = (1860.0, 2460.0, 2768.0, 911.75, 16439.0, 4395.0, 5765.0, 504.27, 574.94) # "H2O", "OH", "H2", "H", "H(-)", "HO2", "H2O2", "He", "Ne" in Armstrong
 
     # Initialise variables
@@ -211,7 +210,7 @@ function photodestruction(solar_activity::Float64, dt::Union{Float64, Int64}, pa
                         "SPD", # " OH(D2Σ) -> O(3P) + H"
                         "SPI", # " OH() -> OH(+) + e-"
                     )
-                    wavelength_range = ((2439.0,2460.0), (2150.0,2174.0), (1400.0, 1800.0), (1208.0, 1220.0), (928.0, 1200.0), (0.0, 928.0))
+                    wavelength_range = ((2439.0,2460.0), (2150.0,2170.0), (1400.0, 1800.0), (1208.0, 1220.0), (1208.0, 1220.0), (928.0, 1000.0), (0.0, 928.0))
                     # wavelength_range = ((2450.0,2460.0), (2140.0,2200.0), (1400.0, 1800.0), (1208.0, 1220.0), (928.0, 1200.0), (0.0, 928.0))
                 
                 elseif parent_type == "H2"
