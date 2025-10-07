@@ -58,12 +58,16 @@ function get_vibrorotational_energy(species::String)
         energy = 0.35 * conversion_factor
     elseif species == "OH(X2π)" || species == "OH"
         energy = 0.20 * conversion_factor
-    elseif species == "OH(A2Σ+)" || species == "OH(1Σ+)" || species == "OH(12Δ/22Π)"
+    elseif species == "OH(A2Σ+)"
+        energy = 0.25 * conversion_factor
+    elseif species == "OH(1Σ+)" || species == "OH(12Δ/22Π)"
         energy = 0.25 * conversion_factor
     elseif species == "OH(A2Σ+, v'=3)"
-        energy = 1.50 * conversion_factor
+        # energy = 1.50 * conversion_factor
+        energy = 0.00 * conversion_factor # TO REVIEW
     elseif species == "OH(A2Σ+, v'=2)"
         energy = 1.05 * conversion_factor
+        # energy = 1.10 * conversion_factor
     elseif species == "OH(B2Σ)"
         energy = 0.05 * conversion_factor
     elseif species == "OH(D2Σ)"
@@ -87,6 +91,33 @@ function get_vibrorotational_energy(species::String)
     return energy
 end
 
+function get_electronic_energy_predis(species::String)
+
+    """
+    Return the electronic energy [J] for the given `species` for predissociation cases.
+    """
+    energy = 0.0
+    conversion_factor = 1.602e-19
+
+    if species == "OH(X2π)" || species == "OH"
+        energy = 0.00 * conversion_factor
+    elseif species == "OH(A2Σ+)" || species == "OH(A2Σ+, v'=3)" || species == "OH(A2Σ+, v'=2)"
+        energy = 4.05 * conversion_factor
+    elseif species == "OH(1Σ+)"
+        energy = 4.05 * conversion_factor
+    elseif species == "OH(12Δ/22Π)"
+        energy = 6.50 * conversion_factor
+    elseif species == "OH(B2Σ)"
+        energy = 8.65 * conversion_factor
+    elseif species == "OH(D2Σ)"
+        energy = 10.18 * conversion_factor
+    else
+        throw(ArgumentError("Unknown species: $species"))
+    end
+
+    return energy
+end
+
 
 function allocate_velocity_new(reaction, E_photon, p_photon)
 
@@ -97,15 +128,14 @@ function allocate_velocity_new(reaction, E_photon, p_photon)
     # 1. Get masses for all the species involved
     m_parent, m_heavy, m_light = get_masses(reaction.product_types[1], reaction.product_types[2], reaction.product_types[3])
 
-    # 2. Calculate excess energy for reaction
+    # 2. Calculate excess energy for reaction    
     if reaction.product_types[1] == "OH"
-        E_parent = 1/2 * m_parent * norm(reaction.parent_velocity)^2 + get_vibrorotational_energy("OH(X2π)") # PREDISSOCIATION IS TREATED DIFFERENTLY
-        E_excess = (E_photon - get_vibrorotational_energy(reaction.product_names[1]) + E_parent) - ((reaction.E_bond)+ get_vibrorotational_energy(reaction.product_names[2]) + get_vibrorotational_energy(reaction.product_names[3]))
+        E_parent = 1/2 * m_parent * norm(reaction.parent_velocity)^2
+        E_excess = (E_parent + E_photon - get_electronic_energy_predis(reaction.product_names[1]) - get_vibrorotational_energy(reaction.product_names[1]))
     else
         E_parent = 1/2 * m_parent * norm(reaction.parent_velocity)^2 + get_vibrorotational_energy(reaction.product_names[1])
-        E_excess = (E_photon + E_parent) - (reaction.E_bond + get_vibrorotational_energy(reaction.product_names[2]) + get_vibrorotational_energy(reaction.product_names[3]))
+        E_excess = (E_photon + E_parent) - reaction.E_bond - (get_vibrorotational_energy(reaction.product_names[2]) + get_vibrorotational_energy(reaction.product_names[3]))
     end
-    
 
     # 3. Calculate unitary photon momentum tuple
     u_ph = p_photon ./ norm(p_photon)
