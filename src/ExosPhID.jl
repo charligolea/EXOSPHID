@@ -113,9 +113,9 @@ function photodestruction(solar_activity::Float32, dt::Union{Float32, Int32}, pa
                 if parent_type == "H2O"
                     tsh_energies = (
                         5.113f0 , # "H2O + γ -> OH(X2π) + H"
-                        7.05f0, # "H2O + γ -> O + H2"
+                        6.98f0, # "H2O + γ -> O + H2" # New value from Sumin Yan et al. 2021
                         9.12f0, # "H2O + γ -> OH(A2Σ+) + H"
-                        (9.12f0, 9.54f0), # "H2O + γ -> O + H + H"
+                        (9.12f0, 9.54f0 + 0.25f0), # "H2O + γ -> O + H + H"
                         12.60f0, # " H2O + γ -> H2O(+) + e-"
                         (12.60f0, 18.11f0), # " H2O + γ -> H + OH(+) + e-" (The first is the ionisation energy, the second is the total dissociative ionisation energy)
                         (12.60f0, 18.65f0), # " H2O + γ -> H2 + O(+) + e-" (The first is the ionisation energy, the second is the total dissociative ionisation energy)
@@ -132,14 +132,14 @@ function photodestruction(solar_activity::Float32, dt::Union{Float32, Int32}, pa
                         (("H2O", "H2O(+)", "e(-)"), ("H2O(+)", "OH", "H(+)"))   # " H2O + γ -> H(+) + OH + e-"
                     )
                     reaction_probabilities = (
-                        (0.99f0, 0.70f0, 0.70f0, 0.00f0, 0.00f0, 0.00f0),  # "H2O + γ -> OH(X2π) + H"
-                        (0.01f0, 0.10f0, 0.10f0, 0.00f0, 0.00f0, 0.00f0),  # "H2O + γ -> O + H2"
-                        (0.00f0, 0.08f0, 0.08f0, 0.00f0, 0.00f0, 0.00f0),  # "H2O + γ -> OH(A2Σ+) + H"
-                        (0.00f0, 0.12f0, 0.12f0, 0.00f0, 0.00f0, 0.00f0),  # "H2O + γ -> O + H + H"
-                        (0.00f0, 0.00f0, 0.00f0, 1.00f0, 0.60f0, 0.63f0),  # " H2O + γ -> H2O(+) + e-"
-                        (0.00f0, 0.00f0, 0.00f0, 0.00f0, 0.40f0, 0.31f0),  # " H2O + γ -> H + OH(+) + e-"
-                        (0.00f0, 0.00f0, 0.00f0, 0.00f0, 0.00f0, 0.043f0), # " H2O + γ -> H2 + O(+) + e-"
-                        (0.00f0, 0.00f0, 0.00f0, 0.00f0, 0.00f0, 0.017f0)  # " H2O + γ -> H(+) + OH + e-"
+                        (1.00f0, 0.99f0, 0.70f0, 0.70f0, 0.00f0, 0.00f0, 0.00f0),  # "H2O + γ -> OH(X2π) + H"
+                        (0.00f0, 0.01f0, 0.10f0, 0.10f0, 0.00f0, 0.00f0, 0.00f0),  # "H2O + γ -> O + H2"
+                        (0.00f0, 0.00f0, 0.08f0, 0.08f0, 0.00f0, 0.00f0, 0.00f0),  # "H2O + γ -> OH(A2Σ+) + H"
+                        (0.00f0, 0.00f0, 0.12f0, 0.12f0, 0.00f0, 0.00f0, 0.00f0),  # "H2O + γ -> O + H + H"
+                        (0.00f0, 0.00f0, 0.00f0, 0.00f0, 1.00f0, 0.60f0, 0.63f0),  # " H2O + γ -> H2O(+) + e-"
+                        (0.00f0, 0.00f0, 0.00f0, 0.00f0, 0.00f0, 0.40f0, 0.31f0),  # " H2O + γ -> H + OH(+) + e-"
+                        (0.00f0, 0.00f0, 0.00f0, 0.00f0, 0.00f0, 0.00f0, 0.043f0), # " H2O + γ -> H2 + O(+) + e-"
+                        (0.00f0, 0.00f0, 0.00f0, 0.00f0, 0.00f0, 0.00f0, 0.017f0)  # " H2O + γ -> H(+) + OH + e-"
                     )
                     reaction_names = (
                         "H2O-PD1", # "H2O + γ -> OH(X2π) + H"
@@ -162,7 +162,7 @@ function photodestruction(solar_activity::Float32, dt::Union{Float32, Int32}, pa
                         "DiPI"  # " H2O + γ -> H(+) + OH + e-"
                     )
 
-                    wavelength_range = ((1357.0f0, 1860.0f0), (1208.0f0, 1220.0f0), (984.0f0, 1357.0f0), (684.4f0, 984.0f0), (662.0f0, 684.4f0), (0.0f0, 662.0f0))
+                    wavelength_range = ((1760.0f0, 1860.0f0), (1357.0f0, 1760.0f0), (1208.0f0, 1220.0f0), (984.0f0, 1357.0f0), (684.4f0, 984.0f0), (662.0f0, 684.4f0), (0.0f0, 662.0f0))
 
                 elseif parent_type == "OH"
                     tsh_energies = (
@@ -327,13 +327,11 @@ function photodestruction(solar_activity::Float32, dt::Union{Float32, Int32}, pa
                         if present_reaction == "SPD"
 
                             product_names = map(s -> replace(s, r"\((?!\+).*?\)" => ""), species_names[reaction_index])
-
-                            if (photon_energy/1.602f-19 >= tsh_energies[reaction_index]) # To avoid problems with H2O-PD2
-                                reaction = SimplePhotodissociation.PhotoReaction(tsh_energies[reaction_index], parent_velocity, sun_tuple, nothing, nothing, species_names[reaction_index], false)
-                                final_speeds_light, final_speeds_heavy = SimplePhotodissociation.simulate_photodissociation(reaction, photon_energy)
-                                product_types = [product_names[2], product_names[3]]
-                                product_velocities = [final_speeds_heavy, final_speeds_light]
-                            end
+                            reaction = SimplePhotodissociation.PhotoReaction(tsh_energies[reaction_index], parent_velocity, sun_tuple, nothing, nothing, species_names[reaction_index], false)
+                            final_speeds_light, final_speeds_heavy = SimplePhotodissociation.simulate_photodissociation(reaction, photon_energy)
+                            
+                            product_types = [product_names[2], product_names[3]]
+                            product_velocities = [final_speeds_heavy, final_speeds_light]
 
                         # H2O Double photodissociation
                         elseif present_reaction == "DPD"

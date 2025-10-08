@@ -59,8 +59,6 @@ function get_vibrorotational_energy(species::String)
         energy = 0.20f0 * conversion_factor
     elseif species == "OH(A2Σ+)"
         energy = 0.25f0 * conversion_factor
-    elseif species == "OH(DPD)"
-        energy = -0.25f0 * conversion_factor
     elseif species == "OH(1Σ+)" || species == "OH(12Δ/22Π)"
         energy = 0.25f0 * conversion_factor
     elseif species == "OH(A2Σ+, v'=3)"
@@ -126,9 +124,16 @@ function allocate_velocity_new(reaction, E_photon, p_photon_magnitude)
     if reaction.product_types[1] == "OH" && reaction.product_names[1] != "OH(DPD)"
         E_parent = 0.5f0 * m_parent * norm(reaction.parent_velocity)^2
         E_excess = (E_parent + E_photon - get_electronic_energy_predis(reaction.product_names[1]) - get_vibrorotational_energy(reaction.product_names[1]))
+    elseif reaction.product_names[1] == "OH(DPD)"
+        E_parent = 0.5f0 * m_parent * norm(reaction.parent_velocity)^2
+        E_excess = (E_photon + E_parent) - reaction.E_bond 
     else
         E_parent = 0.5f0 * m_parent * norm(reaction.parent_velocity)^2 + get_vibrorotational_energy(reaction.product_names[1])
         E_excess = (E_photon + E_parent) - reaction.E_bond - (get_vibrorotational_energy(reaction.product_names[2]) + get_vibrorotational_energy(reaction.product_names[3]))
+    end
+
+    if E_excess <0
+        print("E_excess: ", E_excess/1.602f-19, " eV\n")
     end
 
     # 3. Calculate photon linear momentum vector by generating random incoming direction
@@ -190,9 +195,7 @@ function multiple_photodissociation(reaction::PhotoReaction)
     final_speeds_heavy = []
 
     # 1. Loop over photon energy vector
-
     for E_photon in reaction.energy_vector
-
         if E_photon > reaction.E_bond
             # 1.1. Simulate individual photoreaction for every incoming photon
             v_light_tuple, v_heavy_tuple = simulate_photodissociation(reaction, E_photon)
