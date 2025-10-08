@@ -2,31 +2,30 @@ module SimplePhotodissociation
 
 using Random, LinearAlgebra, Distributions, Statistics, DataFrames
 
-const c = 299792458        # Speed of light in m/s
-const h  = 6.62607015e-34  # Plank Constant in J.s
+const c = 2.99792458f8        # Speed of light in m/s
 const m_fund = 1.66054e-27 # 1 M.U.
 
 struct PhotoReaction
-    E_bond_eV::Float64 # Threshold energy for given photodissociation reaction in eV -> USER INPUT
-    parent_velocity::Union{Tuple{Float64, Float64, Float64}, Float64} # Velocity of the parent molecule in m/s (H2O, OH, H2) -> USER INPUT
-    sun_tuple::Union{Tuple{Float64, Float64, Float64}, Nothing} # 
-    wvl_range::Union{Vector{Float64}, Nothing} # Contains photon wavelength for specified range. Not necessary if just running simple_photodissociation / simple_ionisation function
-    energy_vector::Union{Vector{Float64}, Nothing} # Contains photon energies for specified range. Not necessary if just running simple_photodissociation / simple_ionisation function
+    E_bond_eV::Float32 # Threshold energy for given photodissociation reaction in eV -> USER INPUT
+    parent_velocity::Union{Tuple{Float32, Float32, Float32}, Float32} # Velocity of the parent molecule in m/s (H2O, OH, H2) -> USER INPUT
+    sun_tuple::Union{Tuple{Float32, Float32, Float32}, Nothing} # 
+    wvl_range::Union{Vector{Float32}, Nothing} # Contains photon wavelength for specified range. Not necessary if just running simple_photodissociation / simple_ionisation function
+    energy_vector::Union{Vector{Float32}, Nothing} # Contains photon energies for specified range. Not necessary if just running simple_photodissociation / simple_ionisation function
     product_names::Union{Tuple{String, String, String}, Nothing} # USER INPUT -> Dict containing all involved species names. Must contain 3 keys: "parent_name", "heavy_child_name", "light_child_name""
     product_types::Union{Tuple{String, String, String}, Nothing}
-    E_bond::Float64 # CALCULATED -> Photon Energy in J
+    E_bond::Float32 # CALCULATED -> Photon Energy in J
     display_info::Bool # Set true if you want to print photoproduct velocity analysis at the end
 
     function PhotoReaction(E_bond_eV, parent_velocity, sun_tuple, wvl_range, energy_vector, product_names, display_info)
-        E_bond = E_bond_eV * 1.602e-19
+        E_bond = E_bond_eV * 1.602f-19
         product_types = map(s -> replace(s, r"\(.*\)" => ""),product_names)
         new(E_bond_eV, parent_velocity, sun_tuple, wvl_range, energy_vector, product_names, product_types, E_bond, display_info)
     end
 end
 
 function random_unit_tuple()
-    θ, φ = 2π * rand(), π * rand()
-    return (sin(φ) * cos(θ), sin(φ) * sin(θ), cos(φ))
+    θ, φ = Float32(2π) * rand(Float32), Float32(π) * rand(Float32)
+    return (Float32(sin(φ) * cos(θ)), Float32(sin(φ) * sin(θ)), Float32(cos(φ)))
 end
 
 function get_masses(parent_name, heavy_child_name, light_child_name)
@@ -36,7 +35,7 @@ function get_masses(parent_name, heavy_child_name, light_child_name)
     possible_species = ("H", "H2", "O", "OH", "H2O", "HO2", "H2O2", "He", "Ne")
     mass_dict = (1* m_fund, 2 * m_fund, 16 * m_fund, 17 * m_fund, 18 * m_fund, 33 * m_fund, 34 * m_fund, 4 * m_fund, 20 * m_fund)
 
-    m_parent = m_heavy = m_light = 0.0
+    m_parent = m_heavy = m_light = 0.0f0
     m_parent = mass_dict[findfirst(isequal(parent_name), possible_species)]
     m_heavy = mass_dict[findfirst(isequal(heavy_child_name), possible_species)]
     m_light = mass_dict[findfirst(isequal(light_child_name), possible_species)]
@@ -51,39 +50,34 @@ function get_vibrorotational_energy(species::String)
 
     Valid species values: "H2O", "OH", "H2", "H", "H(-)", "HO2", "H2O2", "He", "Ne".
     """
-    energy = 0.0
-    conversion_factor = 1.602e-19
+    energy = 0.0f0
+    conversion_factor = 1.602f-19
 
     if species == "H2O"
-        energy = 0.35 * conversion_factor
+        energy = 0.35f0 * conversion_factor
     elseif species == "OH(X2π)" || species == "OH"
-        energy = 0.20 * conversion_factor
+        energy = 0.20f0 * conversion_factor
     elseif species == "OH(A2Σ+)"
-        energy = 0.25 * conversion_factor
+        energy = 0.25f0 * conversion_factor
+    elseif species == "OH(DPD)"
+        energy = -0.25f0 * conversion_factor
     elseif species == "OH(1Σ+)" || species == "OH(12Δ/22Π)"
-        energy = 0.25 * conversion_factor
+        energy = 0.25f0 * conversion_factor
     elseif species == "OH(A2Σ+, v'=3)"
-        # energy = 1.50 * conversion_factor
-        energy = 0.00 * conversion_factor # TO REVIEW
+        # energy = 1.50f0 * conversion_factor
+        energy = 0.00f0 * conversion_factor # TO REVIEW
     elseif species == "OH(A2Σ+, v'=2)"
-        energy = 1.05 * conversion_factor
-        # energy = 1.10 * conversion_factor
+        energy = 1.05f0 * conversion_factor
     elseif species == "OH(B2Σ)"
-        energy = 0.05 * conversion_factor
+        energy = 0.05f0 * conversion_factor
     elseif species == "OH(D2Σ)"
-        energy = 0.20 * conversion_factor
+        energy = 0.20f0 * conversion_factor
     elseif species == "O" || species == "O(3P)" || species == "O(1D)" || species == "O(1S)"
-        energy = 0.0 * conversion_factor
+        energy = 0.0f0 * conversion_factor
     elseif species == "H2"
-        energy = 0.30 * conversion_factor
-    elseif species == "H(1s)" || species == "H(2s,2p)" || species == "H"  || species == "He"  || species == "Ne"
-        energy = 0.0 * conversion_factor
-    elseif species == "H(-)"
-        energy = 0.0 * conversion_factor
-    elseif species == "HO2"
-        energy = 0.0 * conversion_factor
-    elseif species == "H2O2"
-        energy = 0.0 * conversion_factor
+        energy = 0.30f0 * conversion_factor
+    elseif species == "H(1s)" || species == "H(2s,2p)" || species == "H" || species == "H(-)" || species == "HO2"|| species == "H2O2" || species == "He"  || species == "Ne"
+        energy = 0.0f0 * conversion_factor
     else
         throw(ArgumentError("Unknown species: $species"))
     end
@@ -96,21 +90,21 @@ function get_electronic_energy_predis(species::String)
     """
     Return the electronic energy [J] for the given `species` for predissociation cases.
     """
-    energy = 0.0
-    conversion_factor = 1.602e-19
+    energy = 0.0f0
+    conversion_factor = 1.602f-19
 
     if species == "OH(X2π)" || species == "OH"
-        energy = 0.00 * conversion_factor
+        energy = 0.00f0 * conversion_factor
     elseif species == "OH(A2Σ+)" || species == "OH(A2Σ+, v'=3)" || species == "OH(A2Σ+, v'=2)"
-        energy = 4.05 * conversion_factor
+        energy = 4.05f0 * conversion_factor
     elseif species == "OH(1Σ+)"
-        energy = 4.05 * conversion_factor
+        energy = 4.05f0 * conversion_factor
     elseif species == "OH(12Δ/22Π)"
-        energy = 6.50 * conversion_factor
+        energy = 6.50f0 * conversion_factor
     elseif species == "OH(B2Σ)"
-        energy = 8.65 * conversion_factor
+        energy = 8.65f0 * conversion_factor
     elseif species == "OH(D2Σ)"
-        energy = 10.18 * conversion_factor
+        energy = 10.18f0 * conversion_factor
     else
         throw(ArgumentError("Unknown species: $species"))
     end
@@ -119,7 +113,7 @@ function get_electronic_energy_predis(species::String)
 end
 
 
-function allocate_velocity_new(reaction, E_photon, p_photon)
+function allocate_velocity_new(reaction, E_photon, p_photon_magnitude)
 
     # Calculate velocities for the photodissociation products according to the moment and energy conservation quations
     # E_photon: Photon Energy in J
@@ -129,21 +123,26 @@ function allocate_velocity_new(reaction, E_photon, p_photon)
     m_parent, m_heavy, m_light = get_masses(reaction.product_types[1], reaction.product_types[2], reaction.product_types[3])
 
     # 2. Calculate excess energy for reaction    
-    if reaction.product_types[1] == "OH"
-        E_parent = 1/2 * m_parent * norm(reaction.parent_velocity)^2
+    if reaction.product_types[1] == "OH" && reaction.product_names[1] != "OH(DPD)"
+        E_parent = 0.5f0 * m_parent * norm(reaction.parent_velocity)^2
         E_excess = (E_parent + E_photon - get_electronic_energy_predis(reaction.product_names[1]) - get_vibrorotational_energy(reaction.product_names[1]))
     else
-        E_parent = 1/2 * m_parent * norm(reaction.parent_velocity)^2 + get_vibrorotational_energy(reaction.product_names[1])
+        E_parent = 0.5f0 * m_parent * norm(reaction.parent_velocity)^2 + get_vibrorotational_energy(reaction.product_names[1])
         E_excess = (E_photon + E_parent) - reaction.E_bond - (get_vibrorotational_energy(reaction.product_names[2]) + get_vibrorotational_energy(reaction.product_names[3]))
     end
 
-    # 3. Calculate unitary photon momentum tuple
-    u_ph = p_photon ./ norm(p_photon)
+    # 3. Calculate photon linear momentum vector by generating random incoming direction
+    if reaction.sun_tuple isa Tuple{Float32, Float32, Float32}
+        p_photon = p_photon_magnitude .* sun_tuple
+    elseif reaction.sun_tuple isa Nothing
+        u_ph = random_unit_tuple()
+        p_photon = p_photon_magnitude .* u_ph
+    end
 
     # 4. Calculate parent velocity tuple
-    if reaction.parent_velocity isa Float64
+    if reaction.parent_velocity isa Float32
         v_parent = reaction.parent_velocity .* random_unit_tuple()
-    elseif reaction.parent_velocity isa Tuple{Float64, Float64, Float64}
+    elseif reaction.parent_velocity isa Tuple{Float32, Float32, Float32}
         v_parent = reaction.parent_velocity
     end
 
@@ -174,17 +173,9 @@ function simulate_photodissociation(reaction::PhotoReaction, E_photon)
     # 1. Calculate photon linear momentum magnitude
     p_photon_magnitude = (E_photon) / c
 
-    # 2. Calculate photon linear momentum vector by generating random incoming direction
-    if reaction.sun_tuple isa Tuple{Float64, Float64, Float64}
-        p_photon = p_photon_magnitude .* sun_tuple
-    elseif reaction.sun_tuple isa Nothing
-        p_photon = p_photon_magnitude .* random_unit_tuple()
-    end
+    # 2. Calculate velocity of heavy and light photoreaction product
+    v_light_tuple, v_heavy_tuple = allocate_velocity_new(reaction, E_photon, p_photon_magnitude)
 
-    # 3. Calculate velocity of heavy and light photoreaction product
-    v_light_tuple, v_heavy_tuple = allocate_velocity_new(reaction, E_photon, p_photon)
-
-    # 5. Output trajectories and veloicties for "light" and "heavy" photo product
     return v_light_tuple, v_heavy_tuple
 end
 
@@ -200,7 +191,7 @@ function multiple_photodissociation(reaction::PhotoReaction)
 
     # 1. Loop over photon energy vector
 
-    for (index, E_photon) in enumerate(reaction.energy_vector)
+    for E_photon in reaction.energy_vector
 
         if E_photon > reaction.E_bond
             # 1.1. Simulate individual photoreaction for every incoming photon
@@ -213,7 +204,7 @@ function multiple_photodissociation(reaction::PhotoReaction)
     final_speeds_heavy_norms = [norm(p) for p in final_speeds_heavy]
     final_speeds_light_norms = [norm(p) for p in final_speeds_light]
 
-    # 4. Show mean, STD and median speeds for photo products
+    # 2. Show mean, STD and median speeds for photo products
 
     if reaction.display_info
         data_speeds = DataFrame(

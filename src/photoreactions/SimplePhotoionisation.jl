@@ -2,32 +2,31 @@ module SimplePhotoionisation
 
 using Random, LinearAlgebra, Distributions, Statistics, DataFrames
 
-const c = 299792458        # Speed of light in m/s
-const h  = 6.62607015e-34  # Plank Constant in J.s
+const c = 2.99792458f8        # Speed of light in m/s
 const m_el = 9.1093837e-31 # Electron mass in kg
 const m_fund = 1.66054e-27 # 1 M.U.
 
 struct PhotoReaction
-    E_ionisation_eV::Float64 # Ionisation threshold energy in eV
-    parent_velocity::Union{Tuple{Float64, Float64, Float64}, Float64} # Velocity of the parent molecule in m/s (H2O, OH, H2) -> USER INPUT
-    sun_tuple::Union{Tuple{Float64, Float64, Float64}, Nothing}
-    wvl_range::Union{Vector{Float64}, Nothing} # Contains photon wavelength for specified range. Not necessary if just running simple_photodissociation / simple_ionisation function
-    energy_vector::Union{Vector{Float64}, Nothing} # Contains photon energies for specified range. Not necessary if just running simple_photodissociation / simple_ionisation function
+    E_ionisation_eV::Float32 # Ionisation threshold energy in eV
+    parent_velocity::Union{Tuple{Float32, Float32, Float32}, Float32} # Velocity of the parent molecule in m/s (H2O, OH, H2) -> USER INPUT
+    sun_tuple::Union{Tuple{Float32, Float32, Float32}, Nothing}
+    wvl_range::Union{Vector{Float32}, Nothing} # Contains photon wavelength for specified range. Not necessary if just running simple_photodissociation / simple_ionisation function
+    energy_vector::Union{Vector{Float32}, Nothing} # Contains photon energies for specified range. Not necessary if just running simple_photodissociation / simple_ionisation function
     product_names::Union{Tuple{String, String, String}, Nothing} # USER INPUT -> Dict containing all involved species names. Must contain 3 keys: "parent_name", "heavy_child_name", "light_child_name""
     product_types::Union{Tuple{String, String, String}, Nothing}
-    E_ionisation::Float64  # CALCULATED -> Ionisation energy in J
+    E_ionisation::Float32  # CALCULATED -> Ionisation energy in J
     display_info::Bool # Set true if you want to print photoproduct velocity analysis at the end
 
     function PhotoReaction(E_ionisation_eV, parent_velocity, sun_tuple, wvl_range, energy_vector, product_names, display_info)
-        E_ionisation = E_ionisation_eV * 1.602e-19
+        E_ionisation = E_ionisation_eV * 1.602f-19
         product_types = map(s -> replace(s, r"\(.*\)" => ""),product_names)
         new(E_ionisation_eV, parent_velocity, sun_tuple, wvl_range, energy_vector, product_names, product_types, E_ionisation, display_info)
     end
 end
 
 function random_unit_tuple()
-    θ, φ = 2π * rand(), π * rand()
-    return (sin(φ) * cos(θ), sin(φ) * sin(θ), cos(φ))
+    θ, φ = Float32(2π) * rand(Float32), Float32(π) * rand(Float32)
+    return (Float32(sin(φ) * cos(θ)), Float32(sin(φ) * sin(θ)), Float32(cos(φ)))
 end
 
 function get_masses(parent_name)
@@ -39,7 +38,7 @@ function get_masses(parent_name)
     return m_parent, m_ion
 end
 
-function allocate_velocity_new(reaction, E_photon, p_photon)
+function allocate_velocity_new(reaction, E_photon, p_photon_magnitude)
 
     # Calculate velocities for the photoionisation products according to the moment and energy conservation quations
     # E_photon: Photon Energy in J
@@ -50,13 +49,18 @@ function allocate_velocity_new(reaction, E_photon, p_photon)
     # 2. Calculate excess energy for reaction
     E_excess = E_photon - reaction.E_ionisation
     
-    # 3. Calculate unitary photon momentum tuple
-    u_ph = p_photon ./ norm(p_photon)
+    # 3. Calculate photon linear momentum tuple by generating random incoming direction
+    if reaction.sun_tuple isa Tuple{Float32, Float32, Float32}
+        p_photon = p_photon_magnitude .* sun_tuple
+    elseif reaction.sun_tuple isa Nothing
+        u_ph = random_unit_tuple()
+        p_photon = p_photon_magnitude .* u_ph
+    end
 
     # 4. Generate random direction for parent molecule if not given and calculate velocity tuple
-    if reaction.parent_velocity isa Float64
+    if reaction.parent_velocity isa Float32
         v_parent = reaction.parent_velocity .* random_unit_tuple()
-    elseif reaction.parent_velocity isa Tuple{Float64, Float64, Float64}
+    elseif reaction.parent_velocity isa Tuple{Float32, Float32, Float32}
         v_parent = reaction.parent_velocity
     end
 
@@ -78,8 +82,6 @@ function allocate_velocity_new(reaction, E_photon, p_photon)
 
     v_ion_tuple= (total_momentum .- m_el.*v_el_tuple) ./ m_ion
 
-    # 8. Only interested in ion speed
-
     return v_ion_tuple
 end
 
@@ -89,17 +91,9 @@ function simulate_photoionisation(reaction::PhotoReaction, E_photon)
     # 1. Calculate photon linear momentum magnitude
     p_photon_magnitude = (E_photon) / c
 
-    # 2. Calculate photon linear momentum vector by generating random incoming direction
-    if reaction.sun_tuple isa Tuple{Float64, Float64, Float64}
-        p_photon = p_photon_magnitude .* sun_tuple
-    elseif reaction.sun_tuple isa Nothing
-        p_photon = p_photon_magnitude .* random_unit_tuple()
-    end
+    # 2. Calculate velocity of product ion
+    v_ion_tuple = allocate_velocity_new(reaction, E_photon, p_photon_magnitude)
 
-    # 3. Calculate velocity of product ion
-    v_ion_tuple = allocate_velocity_new(reaction, E_photon, p_photon)
-
-    # 5. Output trajectories and veloicties for product ion
     return v_ion_tuple
 end
 
@@ -111,7 +105,7 @@ function multiple_photoionisation(reaction::PhotoReaction)
     final_speeds_ion = []
 
     # 1. Loop over photon energy vector
-    for (index, E_photon) in enumerate(reaction.energy_vector)
+    for E_photon in reaction.energy_vector
 
         if E_photon > reaction.E_ionisation
             # 1.1. Simulate individual photoreaction for every incoming photon
@@ -125,7 +119,7 @@ function multiple_photoionisation(reaction::PhotoReaction)
 
     final_speeds_ion_norm = [norm(p) for p in final_speeds_ion]
 
-    # 4. Show mean, STD and median speeds for product ions
+    # 2. Show mean, STD and median speeds for product ions
     if reaction.display_info
         data_speeds = DataFrame(
         Product = [reaction.product_names[1]],
