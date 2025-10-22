@@ -1,8 +1,36 @@
-get_tsh_energies(photo_info) = photo_info[1]  # Already converted to J
-get_species_names(photo_info) = photo_info[2]
-unpack_present_reaction(reaction_info) = reaction_info[1]
-unpack_reaction_index(reaction_info) = reaction_info[3]
+"""include("../database/photodatabase.jl")
+using .photodatabase"""
+
+include("../database/species/general_construct.jl")
+
+"""
+#:: Various functions to unpack photochemical_info
+#-------------------------------------------------------------------------------------------
+
+# SUNFUNCTIONS:
+- get_tsh_energies(photo_info) = unpack dissociation / ionisation energies for species of interest
+- get_species_names(photo_info) = unpack parent and product species names for reactions for species of interest
+- unpack_present_reaction(reaction_info) = unpack dissociation / ionisation energies for reaction of interest
+- unpack_reaction_index(reaction_info) = unpack parent and product species names for reaction of interest
+- energy_to_J(energy) = converte enrgy to J
+"""
+
+get_tsh_energies(photo_info) = photo_info.tsh_energies  # eV
+get_species_names(photo_info) = photo_info.species_names
 energy_to_J(energy) = 1.602f-19 * energy
+
+
+"""
+#:: FUNCTIONS TO RUN PHOTOLYSIS LOGIC DEPEND ON REACTION TYPE
+#-------------------------------------------------------------------------------------------
+
+# SUNFUNCTIONS:
+- SPD_logic: Simple photodissociation logic
+- DPD_logic: Double photodissociation logic
+- SPI_logic: Simple photoionisation logic
+- DPI_logic: Double photoionisation logic
+- DiPI_logic: Dissociative photoionisation logic
+"""
 
 function SPD_logic(photon_energy::Float32, species_name::NTuple{3, String}, tsh_energy::Float32, parent_velocity::NTuple{3, Float32}, sun_tuple::NTuple{3, Float32})
     product_names = map(s -> replace(s, r"\((?!\+).*?\)" => ""), species_name)
@@ -62,34 +90,49 @@ function DiPI_logic(photon_energy::Float32, species_name::NTuple{2, NTuple{3, St
     return product_velocities, product_types
 end
  
-function call_photodestruction_logic(photoreaction_characteristics, photochemical_info, parent_velocity::NTuple{3, Float32}, sun_tuple::NTuple{3, Float32}, photon_energy::Real)
 
-    present_reaction = unpack_present_reaction(photoreaction_characteristics)
-    reaction_index = unpack_reaction_index(photoreaction_characteristics)
+"""
+#:: FUNCTION: call_photodestruction_logic(current_reaction, photochemical_info, parent_velocity, sun_tuple, photon_energy)
+#-------------------------------------------------------------------------------------------
+
+# OBJECTIVE:
+- Call the apropriate photodestruction logic providing the relevant photochemical information
+
+# INPUTS:
+- current_reaction
+- photochemical_info
+- parent_velocity: 3D tuple with aprent velocity
+- sun_tuple: 3D tuple containing direction of incident photons
+- photon_energy: in J
+"""
+
+function call_photodestruction_logic(current_reaction, photochemical_info, parent_velocity::NTuple{3, Float32}, sun_tuple::NTuple{3, Float32}, photon_energy::Real)
+
+    pr = current_reaction.present_reaction
+    r_idx = current_reaction.reaction_index
 
     tsh_energies = get_tsh_energies(photochemical_info)
     species_names = get_species_names(photochemical_info)
 
-
     # Simple photodissociations
-    if present_reaction == "SPD"
-        return SPD_logic(photon_energy, species_names[reaction_index], tsh_energies[reaction_index], parent_velocity, sun_tuple)
+    if pr == "SPD"
+        return SPD_logic(photon_energy, species_names[r_idx], tsh_energies[r_idx], parent_velocity, sun_tuple)
     
-        # H2O Double photodissociation
-    elseif present_reaction == "DPD" 
-        return DPD_logic(photon_energy, species_names[reaction_index], tsh_energies[reaction_index], parent_velocity, sun_tuple)
+    # Double photodissociation
+    elseif pr == "DPD" 
+        return DPD_logic(photon_energy, species_names[r_idx], tsh_energies[r_idx], parent_velocity, sun_tuple)
     
     # Simple photoionisations
-    elseif present_reaction == "SPI"
-        return SPI_logic(photon_energy, species_names[reaction_index], tsh_energies[reaction_index], parent_velocity, sun_tuple)
+    elseif pr == "SPI"
+        return SPI_logic(photon_energy, species_names[r_idx], tsh_energies[r_idx], parent_velocity, sun_tuple)
 
-    # Double electron ejection of negative atomic hydrogen, equivalente to a double photoionization process
-    elseif present_reaction == "DPI"
-        return DPI_logic(photon_energy, species_names[reaction_index], tsh_energies[reaction_index], parent_velocity, sun_tuple)
+    # Double electron ejection of negative atomic hydrogen, equivalent to a double photoionization process
+    elseif pr == "DPI"
+        return DPI_logic(photon_energy, species_names[r_idx], tsh_energies[r_idx], parent_velocity, sun_tuple)
 
     # Dissociative photoionisations
-    elseif present_reaction == "DiPI"
-        return DiPI_logic(photon_energy, species_names[reaction_index], tsh_energies[reaction_index], parent_velocity, sun_tuple)
+    elseif pr == "DiPI"
+        return DiPI_logic(photon_energy, species_names[r_idx], tsh_energies[r_idx], parent_velocity, sun_tuple)
     end
 
 end

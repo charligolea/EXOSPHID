@@ -1,47 +1,62 @@
-function get_photodestruction_rates(species::String, solar_activity::Float32)
+module photodatabase
+
+using Distributions
+
+export get_photodestruction_rates
+export is_photoreaction_occuring
+export get_wvl_threshold
+export get_species_photochemical_info
+export get_current_reaction
+export get_vibrorotational_energy
+export get_electronic_energy_predis
+export get_masses
+export get_wavelength_range
+
+const exosphid_species = ("H2O", "OH", "H2", "H", "H(-)", "HO2", "H2O2", "He", "Ne")
+export exosphid_species
+
+for parent in exosphid_species
+    include(joinpath(@__DIR__, "species/$parent.jl"))
+end
+
+"""
+#:: FUNCTION: get_photodestruction_rates(species, solar_activity)
+#-------------------------------------------------------------------------------------------
+# OBJECTIVE:
+- Return the photodestruction rate `k` [1/s] for a given `species` and `solar_activity` level (0 = quiet, 1 = active).
+
+# INPUTS:
+- species: name of parent species
+- solar_activity: scalar from 0 (Quiet Sun) to 1 (Active Sun)
+"""
+
+function get_photodestruction_rates(ph_info::Species, solar_activity::Float32)
     """
     Return the photodestruction rate `k` [1/s] 
     for a given `species` and `solar_activity` level (0 = quiet, 1 = active).
     """
 
-    @assert species in ("H2O", "OH", "H2", "H", "H(-)", "HO2", "H2O2", "He", "Ne") "Invalid parent species: $parent_type"
     @assert 0.0 <= solar_activity <= 1.0 "Solar activity must be in (0,1)!"
-    
-    if species == "H2O"
-        quiet_rate = 12.94f-6   # Gomez de Olea (2026)
-        active_rate = 22.25f-6
-    elseif species == "OH"
-        quiet_rate = 22.45f-6   # Gomez de Olea (2025)
-        active_rate = 32.56f-6
-    elseif species == "H2"
-        quiet_rate = 14.24f-6   # Gomez de Olea (2025)
-        active_rate = 32.83f-6
-    elseif species == "H"
-        quiet_rate = 7.00f-8    # Gomez de Olea (2026)
-        active_rate = 1.68f-7
-    elseif species == "H(-)"
-        quiet_rate = 14.24f0      # Gomez de Olea (2026)
-        active_rate = 14.24f0
-    elseif species == "HO2"
-        quiet_rate = 6.59f-3    # Gomez de Olea (2026)
-        active_rate = 6.59f-3
-    elseif species == "H2O2"
-        quiet_rate = 1.43f-4    # Gomez de Olea (2026)
-        active_rate = 1.43f-4
-    elseif species == "He"
-        quiet_rate = 5.57f-8    # Gomez de Olea (2026)
-        active_rate = 16.80f-8
-    elseif species == "Ne"
-        quiet_rate = 1.72f-7    # Gomez de Olea (2026)
-        active_rate = 5.74f-7
-    end
-
-    k = (1 - solar_activity) * quiet_rate + solar_activity * active_rate
+    k = (1 - solar_activity) * ph_info.quiet_rate + solar_activity * ph_info.active_rate
 
     return k
 end
 
-get_photodestruction_rates(species::String, solar_activity::Real) = get_photodestruction_rates(species, Float32(solar_activity))
+get_photodestruction_rates(ph_info::Species, solar_activity::Real) = get_photodestruction_rates(ph_info, Float32(solar_activity))
+
+
+"""
+#:: FUNCTION: is_photoreaction_occuring(k, dt)
+-------------------------------------------------------------------------------------------
+# OBJECTIVE:
+- Calculate probability of photoreaction from photodestruction rate
+- If a generated random number between 0 and 1 is smaller than that probability, then the reaction will happening
+- In that case, the function will return "true"
+
+# INPUTS:
+- k: photodestruction rate
+- dt: time window
+"""
 
 function is_photoreaction_occuring(k::Float32, dt::Float32)
     @assert 0.0 <= k "Photodestruction rate must be positive!"
@@ -52,272 +67,280 @@ end
 
 is_photoreaction_occuring(k::Real, dt::Real) = is_photoreaction_occuring(Float32(k), Float32(dt))
 
-function get_wvl_threshold(parent_type::String)
-    @assert parent_type in ("H2O", "OH", "H2", "H", "H(-)", "HO2", "H2O2", "He", "Ne") "Invalid parent species: $parent_type"
-    # In Armstrong
-    if parent_type == "H2O"
-        wvl_threshold =  1860.0f0
-    elseif parent_type == "OH"
-        wvl_threshold = 2460.0f0
-    elseif parent_type == "H2"
-        wvl_threshold = 2768.0f0
-    elseif parent_type == "H"
-        wvl_threshold = 911.75f0
-    elseif parent_type == "H(-)"
-        wvl_threshold = 16439.0f0
-    elseif parent_type == "HO2"
-        wvl_threshold = 4395.0f0
-    elseif parent_type == "H2O2"
-        wvl_threshold = 5765.0f0
-    elseif parent_type == "He"
-        wvl_threshold = 504.27f0
-    elseif parent_type == "Ne"
-        wvl_threshold = 574.94f0
-    end
 
-    @assert wvl_threshold>0.0 "Wavelength threshold cannot be negative"
+"""
+#:: FUNCTION: get_wvl_threshold(ph_info)
+-------------------------------------------------------------------------------------------
+# OBJECTIVE:
+- Get wavelength threshold in Angstrom for the photolysis of a certain species
 
-    return wvl_threshold
+# INPUTS:
+- ph_info: Species type object containing photochemical info for given parent type
 
+# REFERENCES:
+- Huebner, W. F., Keady, J. J., & Lyon, S. P. (1992). Solar Photo Rates for Planetary Atmospheres and Atmospheric Pollutants. Astrophysics and Space Science, 195, 1–294.
+- Huebner, W. F., & Mukherjee, J. (2015). Photoionization and photodissociation rates in solar and blackbody radiation fields. Planetary and Space Science, 106, 11–45.
+"""
+
+function get_wvl_threshold(ph_info::Species)
+    return ph_info.wvl_threshold
 end
 
+"""
+#:: FUNCTION: get_species_photochemical_info(parent_type)
+-------------------------------------------------------------------------------------------
+# OBJECTIVE:
+- Get photochemical data for the species to simulate
+
+# INPUTS:
+- parent_type: name of parent species
+
+# OUTPUTS: Returns object of type Species containing the photochemical database for the given parent species, including:
+
+- tsh_energies: Bond or ionization reaction. This will have the following types:
+    * SPD: Single Float (dissociatione energy)
+    * SPI: Single Float (ionization energy)
+    * DPD: 2D Tuple (first dissociation energy, total dissociation energy)
+    * DPI: 2D Tuple (first ionization energy, total ionization energy)
+    * DiPI: 2D Tuple (ionization energy, dissociation energy)
+- species_names:
+    * SPD/SPI: 3D Tuple with parent, heavy product and light product species product_names
+    * DPD/DPI/DiPI: 2D Tuple containing 2 3D Tuples for the sperate reactions
+- reaction_probabilities: Branching ratio for a certain reaction in a certain wavelength range
+- reaction_names: Identifiers for the different reactions
+- reaction_types: 
+    * SPD: Simple PhotoDissociation
+    * SPI: Simple PhotoIonisation
+    * DPD: Double PhotoDissociation 
+    * DPI: Double PhotoIonisation
+    * DiPI: Dissociative PhotoIonisation
+- wavelength_range: wavelength ranges for which photochemical reactions are relevant for a given species
+
+# REFERENCES:
+- Combi, M. R., Harris, W. M., & Smyth, W. H. (2004). Gas Dynamics and Kinetics in the Cometary Coma: Theory and Observations.
+- Huebner, W. F., Keady, J. J., & Lyon, S. P. (1992). Solar Photo Rates for Planetary Atmospheres and Atmospheric Pollutants. Astrophysics and Space Science, 195, 1–294.
+- Huebner, W. F., & Mukherjee, J. (2015). Photoionization and photodissociation rates in solar and blackbody radiation fields. Planetary and Space Science, 106, 11–45.
+- Marr, G.V. & West, J.B. (1976). Absolute Photoionization Cross-Section Tables for Helium, Neon, Argon and Krypton in the VUV Spectral Regions. Atomic Data and Nuclear Data Tables, 18, 497.
+- Broad, John T. & Reinhardt, William P. (1976). One- and two-electron photoejection from H⁻: A multichannel J-matrix calculation. Physical Review A, 14(6), 2159–2173.
+"""
 
 function get_species_photochemical_info(parent_type::String)
 
-    @assert parent_type in ("H2O", "OH", "H2", "H", "H(-)", "HO2", "H2O2", "He", "Ne") "Invalid parent species: $parent_type"
+    @assert parent_type in exosphid_species "Invalid parent species: $parent_type"
 
     if parent_type == "H2O"
-        tsh_energies = (
-            5.113f0 , # "H2O + γ -> OH(X2π) + H"
-            6.98f0, # "H2O + γ -> O + H2" # New value from Sumin Yan et al. 2021
-            9.12f0, # "H2O + γ -> OH(A2Σ+) + H"
-            (9.12f0, 9.54f0 + 0.25f0), # "H2O + γ -> O + H + H"
-            12.60f0, # " H2O + γ -> H2O(+) + e-"
-            (12.60f0, 18.11f0), # " H2O + γ -> H + OH(+) + e-" (The first is the ionisation energy, the second is the total dissociative ionisation energy)
-            (12.60f0, 18.65f0), # " H2O + γ -> H2 + O(+) + e-" (The first is the ionisation energy, the second is the total dissociative ionisation energy)
-            (12.60f0, 18.72f0) # " H2O + γ -> H(+) + OH + e-" (The first is the ionisation energy, the second is the total dissociative ionisation energy)
-        )
-        species_names = (
-            ("H2O", "OH(X2π)", "H"),  # "H2O + γ -> OH(X2π) + H"
-            ("H2O", "O(3P)", "H2"),  # "H2O + γ -> O + H2"
-            ("H2O", "OH(A2Σ+)", "H"), # "H2O + γ -> OH(A2Σ+) + H"
-            (("H2O", "OH(A2Σ+)", "H"), ("OH(DPD)", "O", "H")),          # "H2O + γ -> O + H + H"
-            ("H2O", "H2O(+)", "e(-)"),     # " H2O + γ -> H2O(+) + e-"
-            (("H2O", "H2O(+)", "e(-)"), ("H2O(+)", "OH(+)", "H")),  # " H2O + γ -> H + OH(+) + e-"
-            (("H2O", "H2O(+)", "e(-)"), ("H2O(+)", "O(+)", "H2")),  # " H2O + γ -> H2 + O(+) + e-"
-            (("H2O", "H2O(+)", "e(-)"), ("H2O(+)", "OH", "H(+)"))   # " H2O + γ -> H(+) + OH + e-"
-        )
-        reaction_probabilities = (
-            (1.00f0, 0.99f0, 0.70f0, 0.70f0, 0.00f0, 0.00f0, 0.00f0),  # "H2O + γ -> OH(X2π) + H"
-            (0.00f0, 0.01f0, 0.10f0, 0.10f0, 0.00f0, 0.00f0, 0.00f0),  # "H2O + γ -> O + H2"
-            (0.00f0, 0.00f0, 0.08f0, 0.08f0, 0.00f0, 0.00f0, 0.00f0),  # "H2O + γ -> OH(A2Σ+) + H"
-            (0.00f0, 0.00f0, 0.12f0, 0.12f0, 0.00f0, 0.00f0, 0.00f0),  # "H2O + γ -> O + H + H"
-            (0.00f0, 0.00f0, 0.00f0, 0.00f0, 1.00f0, 0.60f0, 0.63f0),  # " H2O + γ -> H2O(+) + e-"
-            (0.00f0, 0.00f0, 0.00f0, 0.00f0, 0.00f0, 0.40f0, 0.31f0),  # " H2O + γ -> H + OH(+) + e-"
-            (0.00f0, 0.00f0, 0.00f0, 0.00f0, 0.00f0, 0.00f0, 0.043f0), # " H2O + γ -> H2 + O(+) + e-"
-            (0.00f0, 0.00f0, 0.00f0, 0.00f0, 0.00f0, 0.00f0, 0.017f0)  # " H2O + γ -> H(+) + OH + e-"
-        )
-        reaction_names = (
-            "H2O-PD1", # "H2O + γ -> OH(X2π) + H"
-            "H2O-PD2", # "H2O + γ -> O + H2"
-            "H2O-PD3", # "H2O + γ -> OH(A2Σ+) + H"
-            "H2O-PD4", # "H2O + γ -> O + H + H"
-            "H2O-PI1", # " H2O + γ -> H2O(+) + e-"
-            "H2O-PI2", # " H2O + γ -> H + OH(+) + e-"
-            "H2O-PI3", # " H2O + γ -> H2 + O(+) + e-"
-            "H2O-PI4"  # " H2O + γ -> H(+) + OH + e-"
-        )
-        reaction_types = (
-            "SPD", # "H2O + γ -> OH(X2π) + H"
-            "SPD", # "H2O + γ -> O + H2"
-            "SPD", # "H2O + γ -> OH(A2Σ+) + H"
-            "DPD", # "H2O + γ -> O + H + H"
-            "SPI", # " H2O + γ -> H2O(+) + e-"
-            "DiPI", # " H2O + γ -> H + OH(+) + e-"
-            "DiPI", # " H2O + γ -> H2 + O(+) + e-"
-            "DiPI"  # " H2O + γ -> H(+) + OH + e-"
-        )
-
-        wavelength_range = ((1760.0f0, 1860.0f0), (1357.0f0, 1760.0f0), (1208.0f0, 1220.0f0), (984.0f0, 1357.0f0), (684.4f0, 984.0f0), (662.0f0, 684.4f0), (0.0f0, 662.0f0))
-
+        return H2O
     elseif parent_type == "OH"
-        tsh_energies = (
-            4.39f0, # " OH(A2Σ+) (v'=3) -> O(3P) + H"
-            4.39f0, # " OH(A2Σ+) (v'=2) -> O(3P) + H"
-            4.39f0, # " OH(1Σ+) -> O(3P) + H"
-            2.42f0, # " OH(12Δ/22Π) -> O(1D) + H"
-            0.20f0, # " OH(B2Σ) -> O(1S) + H"
-            4.39f0, # " OH(D2Σ) -> O(3P) + H"
-            13.36f0, # " OH() -> OH(+) + e-"
-        )
-        species_names = (
-            ("OH(A2Σ+, v'=3)", "O(3P)", "H"), # " OH(A2Σ+) (v'=3) -> O(3P) + H"
-            ("OH(A2Σ+, v'=2)", "O(3P)", "H"), # " OH(A2Σ+) (v'=2) -> O(3P) + H"
-            ("OH(1Σ+)", "O(3P)", "H"), # " OH(1Σ+) -> O(3P) + H"
-            ("OH(12Δ/22Π)", "O(1D)", "H"), # " OH(12Δ/22Π) -> O(1D) + H"
-            ("OH(B2Σ)", "O(1S)", "H"), # " OH(B2Σ) -> O(1S) + H"
-            ("OH(D2Σ)", "O(3P)", "H"), # " OH(D2Σ) -> O(3P) + H"
-            ("OH", "OH(+)", "e(-)"),   # " OH() -> OH(+) + e-"
-        )
-        reaction_probabilities = (
-            (1.00f0, 0.00f0, 0.00f0, 0.00f0, 0.00f0, 0.00f0), # " OH(A2Σ+) (v'=3) -> O(3P) + H"
-            (0.00f0, 1.00f0, 0.00f0, 0.00f0, 0.00f0, 0.00f0), # " OH(A2Σ+) (v'=2) -> O(3P) + H"
-            (0.00f0, 0.00f0, 1.00f0, 0.00f0, 0.00f0, 0.00f0), # " OH(1Σ+) -> O(3P) + H"
-            (0.00f0, 0.00f0, 0.00f0, 0.89f0, 0.00f0, 0.00f0), # " OH(12Δ/22Π) -> O(1D) + H"
-            (0.00f0, 0.00f0, 0.00f0, 0.11f0, 0.00f0, 0.00f0), # " OH(B2Σ) -> O(1S) + H"
-            (0.00f0, 0.00f0, 0.00f0, 0.00f0, 1.00f0, 0.00f0), # " OH(D2Σ) -> O(3P) + H"
-            (0.00f0, 0.00f0, 0.00f0, 0.00f0, 0.00f0, 1.00f0), # " OH() -> OH(+) + e-"
-        )
-        reaction_names = (
-            "OH-PD1", # " OH(A2Σ+) (v'=3) -> O(3P) + H"
-            "OH-PD2", # " OH(A2Σ+) (v'=2) -> O(3P) + H"
-            "OH-PD3", # " OH(1Σ+) -> O(3P) + H"
-            "OH-PD4", # " OH(12Δ/22Π) -> O(1D) + H"
-            "OH-PD5", # " OH(B2Σ) -> O(1S) + H"
-            "OH-PD6", # " OH(D2Σ) -> O(3P) + H"
-            "OH-PI", # " OH() -> OH(+) + e-"
-        )
-        reaction_types = (
-            "SPD", # " OH(A2Σ+) (v'=3) -> O(3P) + H"
-            "SPD", # " OH(A2Σ+) (v'=2) -> O(3P) + H"
-            "SPD", # " OH(1Σ+) -> O(3P) + H"
-            "SPD", # " OH(12Δ/22Π) -> O(1D) + H"
-            "SPD", # " OH(B2Σ) -> O(1S) + H"
-            "SPD", # " OH(D2Σ) -> O(3P) + H"
-            "SPI", # " OH() -> OH(+) + e-"
-        )
-        wavelength_range = ((2439.0f0,2460.0f0), (2150.0f0,2170.0f0), (1400.0f0, 1800.0f0), (1208.0f0, 1220.0f0), (928.0f0, 1000.0f0), (0.0f0, 928.0f0))
-        # wavelength_range = ((2450.0,2460.0), (2140.0,2200.0), (1400.0, 1800.0), (1208.0, 1220.0), (928.0, 1200.0), (0.0, 928.0))
-    
+        return OH
     elseif parent_type == "H2"
-        tsh_energies = (
-            4.48f0, # " H2 -> H(1S) + H(1S)"
-            14.68f0, # " H2 -> H(2S,2P) + H(2S,2P)"
-            15.43f0, # " H2 -> H2(+) + e-"
-            (15.43f0, 17.82f0) # " H2 -> H(+) + H + e-" (The first is the ionisation energy, the second is the total dissociative ionisation energy)
-        )
-        species_names = (
-            ("H2", "H", "H"), # " H2 -> H(1S) + H(1S)"
-            ("H2", "H", "H"), # " H2 -> H(2S,2P) + H(2S,2P)"
-            ("H2", "H2(+)", "e(-)"),   # " H2 -> H2(+) + e-"
-            (("H2", "H2(+)", "e(-)"), ("H2(+)", "H(+)", "H"))  # " H2 -> H(+) + H + e-" (The first is the ionisation energy, the second is the total dissociative ionisation energy)
-        )
-        reaction_probabilities = (
-            (1.00f0, 0.00f0, 0.00f0, 0.00f0), # " H2 -> H(1S) + H(1S)"
-            (0.00f0, 1.00f0, 0.00f0, 0.00f0), # " H2 -> H(2S,2P) + H(2S,2P)"
-            (0.00f0, 0.00f0, 1.00f0, 0.60f0), # " H2 -> H2(+) + e-"
-            (0.00f0, 0.00f0, 0.00f0, 0.40f0)  # " H2 -> H(+) + H + e-" (The first is the ionisation energy, the second is the total dissociative ionisation energy)
-        )
-        reaction_names = (
-            "H2-PD1", # " H2 -> H(1S) + H(1S)"
-            "H2-PD2", # " H2 -> H(2S,2P) + H(2S,2P)"
-            "H2-PI1", # " H2 -> H2(+) + e-"
-            "H2-PI2"  # " H2 -> H(+) + H + e-"
-        )
-        reaction_types = (
-            "SPD", # " H2 -> H(1S) + H(1S)"
-            "SPD", # " H2 -> H(2S,2P) + H(2S,2P)"
-            "SPI", # " H2 -> H2(+) + e-"
-            "DiPI"  # " H2 -> H(+) + H + e-"
-        )
-        wavelength_range = ((844.8f0, 2768.9f0), (803.7f0, 844.8f0), (695.8f0, 803.7f0), (0f0, 695.8f0))
-    
+        return H2
     elseif parent_type == "H"
-        tsh_energies = (13.60f0) # "H -> H(+) + e-"
-        species_names = (("H", "H(+)", "e(-)"),)
-        reaction_probabilities = ((1.00f0),)
-        reaction_names = ("H-PI1",)
-        reaction_types = ("SPI",)
-        wavelength_range = ((0f0, 911.75f0),)
-    
+        return H
     elseif parent_type == "H(-)"
-        tsh_energies = (0.75f0,  # "H(-) -> H + e-"
-                        (0.75f0, 14.63f0) # "H(-) -> H(+) + 2e-"
-                        ) 
-        species_names = (("H(-)", "H", "e(-)"),
-                            (("H(-)", "H", "e(-)"), ("H", "H(+)", "e(-)"))
-                            )
-        reaction_probabilities = ((1.00f0, 0.99f0),
-                                    (0.00f0, 0.01f0)
-                                    )
-        reaction_names = ("H(-)-PI1",
-                            "H(-)-PI2"
-                            )
-        reaction_types = ("SPI",
-                            "DPI" # Double photoionization
-                            ) 
-        wavelength_range = ((847.36f0, 16439.0f0), #Lykke et al 1992 and  Huebner 2015
-                            (0f0, 847.36f0)
-                            ) 
-
-    
+        return H_
     elseif parent_type == "HO2"
-        tsh_energies = (2.82f0) # "HO2 -> OH + O"
-        species_names = (("HO2", "OH", "O"),)
-        reaction_probabilities = ((1.00f0),)
-        reaction_names = ("HO2-PD1",)
-        reaction_types = ("SPD",)
-        wavelength_range = ((0f0, 4395.0f0),)
-    
+        return HO2
     elseif parent_type == "H2O2"
-        tsh_energies = (2.15f0) # "H -> H(+) + e-"
-        species_names = (("H2O2", "OH", "OH"),)
-        reaction_probabilities = ((1.00f0),)
-        reaction_names = ("H2O2-PD1",)
-        reaction_types = ("SPD",)
-        wavelength_range = ((0f0, 5765.0f0),)
-
+        return H2O2
     elseif parent_type == "He"
-        tsh_energies = (24.59f0) # "He -> He(+) + e-"
-        species_names = (("He", "He(+)", "e(-)"),)
-        reaction_probabilities = ((1.00f0),)
-        reaction_names = ("He-PI1",)
-        reaction_types = ("SPI",)
-        wavelength_range = ((0f0, 504.27f0),)
-
+        return He
     elseif parent_type == "Ne"
-        tsh_energies = (21.57f0) # "Ne -> Ne(+) + e-"
-        species_names = (("Ne", "Ne(+)", "e(-)"),)
-        reaction_probabilities = ((1.00f0),)
-        reaction_names = ("Ne-PI1",)
-        reaction_types = ("SPI",)
-        wavelength_range = ((0f0, 574.94f0),)
-
+        return Ne
     end
-
-    return tsh_energies, species_names, reaction_probabilities, reaction_names, reaction_types, wavelength_range
 end
 
-get_reaction_index(photo_info, index) = rand(Categorical([p[index] for p in photo_info[3]]))
-get_reaction_identifier(photo_info, reaction_index) = photo_info[4][reaction_index]
-get_reaction_type(photo_info, reaction_index) = photo_info[5][reaction_index]
-get_wavelength_range(photo_info) = photo_info[6]
+
+"""
+#:: FUNCTION: get_current_reaction(photon_wvl, photochemical_info)
+#-------------------------------------------------------------------------------------------
+
+# OBJECTIVE:
+- Determine photoreaction that will occure and get photochemical info for such reaction
+
+# INPUTS:
+- photochemical_info: 6D object from get_species_photochemical_info
+- photon_wvl: scalar with photon wavelength in Angstrom to determine wavelength range
+
+# SUNFUNCTIONS:
+- get_reaction_index(photo_info, index): for given wavelength range (identified by index) determine the reaction taht will happen according to the branchin ratios in that wavelength range
+- get_reaction_identifier(photo_info, reaction_index): get reaction identifier once the reaction that will happen is known from previous step (identified by reaction_index)
+- get_reaction_type(photo_info, reaction_index): find reaction type (SPD, SPI...etc) in similar fashion
+- get_wavelength_range(photo_info): unpack wavelength ranges for given species
+
+# OUTPUTS: CurrentReaction type object containing
+    - present_reaction: type of photodestruction process (SPD, SPI, DPD, DPI, DiPI, nothing)
+    - reaction_name: identifier
+    - reaction_index: reaction index within all the possible reactions for that aprent species
+    - wvl_range: in which wavelength range relevant for the parent species is the photon wavlength
+end
+"""
+
+get_reaction_index(ph_info::Species, index) = rand(Categorical([p[index] for p in ph_info.reaction_probabilities]))
+get_reaction_identifier(ph_info::Species, reaction_index) = ph_info.reaction_names[reaction_index]
+get_reaction_type(ph_info::Species, reaction_index) = ph_info.reaction_types[reaction_index]
+get_wavelength_range(ph_info::Species) = ph_info.wavelength_range
 
 
-function get_photoreaction_characteristics(photon_wvl::Real, photochemical_info::NTuple{6, Tuple})
+struct CurrentReaction
+    present_reaction::String
+    reaction_name::String
+    reaction_index::Int
+    wvl_range::Tuple
+end
+
+function get_current_reaction(photon_wvl::Real, photochemical_info::Species)
 
     wavelength_range = get_wavelength_range(photochemical_info)
-    present_reaction = nothing
-    reaction_name = nothing
-    reaction_index = nothing
-    wvl_range = nothing
+    wvl_idx = findfirst(r -> r[1] < photon_wvl <= r[2], wavelength_range)
 
-    for (index, range) in enumerate(wavelength_range)
-        if range[1] < photon_wvl <= range[2]  
-            wvl_range = range
-
-            # Determine occuring reaction
-            reaction_index = get_reaction_index(photochemical_info, index)
-            present_reaction = get_reaction_type(photochemical_info, reaction_index)
-            reaction_name = get_reaction_identifier(photochemical_info, reaction_index)
-            break
-        end
-    end
-
-    if present_reaction !== nothing
-        return present_reaction, reaction_name, reaction_index, wvl_range
+    if wvl_idx !== nothing
+        wvl_range = wavelength_range[wvl_idx]
+        r_idx = get_reaction_index(photochemical_info, wvl_idx)
+        pr = get_reaction_type(photochemical_info, r_idx)
+        rn = get_reaction_identifier(photochemical_info, r_idx)
+        return CurrentReaction(pr, rn, r_idx, wvl_range)
     else
         return nothing, nothing, nothing, nothing
     end
+
+end
+
+
+"""
+#:: FUNCTION: get_vibrorotational_energy(species)
+-------------------------------------------------------------------------------------------
+# OBJECTIVE:
+- Return the vibro-rotational energy [J] for a given species
+
+# INPUTS:
+- species::String : Species identifier including electronic state
+#   Valid values: "H2O", "OH", "OH(X2π)", "OH(A2Σ+)", "OH(1Σ+)", "OH(12Δ/22Π)", 
+#                 "OH(A2Σ+, v'=2)", "OH(A2Σ+, v'=3)", "OH(B2Σ)", "OH(D2Σ)", 
+#                 "O", "O(3P)", "O(1D)", "O(1S)", "H2", "H(1s)", "H(2s,2p)", "H", 
+#                 "H(-)", "HO2", "H2O2", "He", "Ne"
+
+# OUTPUTS:
+- energy::Float32 : Vibro-rotational energy in Joules
+"""
+
+const conversion_factor = 1.602f-19
+
+function get_vibrorotational_energy(species::String)
+
+    """
+    Return the vibro-rotational energy [J] for the given `species`.
+
+    Valid species values: "H2O", "OH", "H2", "H", "H(-)", "HO2", "H2O2", "He", "Ne".
+    """
+
+    if species == "H2O"
+        energy = 0.35f0 * conversion_factor
+    elseif species == "OH(X2π)" || species == "OH"
+        energy = 0.22f0 * conversion_factor
+    elseif species == "OH(A2Σ+)" || species == "OH(DPD)"
+        energy = 0.25f0 * conversion_factor
+    elseif species == "OH(1Σ+)" || species == "OH(12Δ/22Π)"
+        energy = 0.25f0 * conversion_factor
+    elseif species == "OH(A2Σ+, v'=3)"
+        # energy = 1.50f0 * conversion_factor
+        energy = 0.20f0 * conversion_factor # Considered as ground state, see vibrorotational theory
+    elseif species == "OH(A2Σ+, v'=2)"
+        energy = 1.05f0 * conversion_factor
+    elseif species == "OH(B2Σ)"
+        energy = 0.05f0 * conversion_factor
+    elseif species == "OH(D2Σ)"
+        energy = 0.20f0 * conversion_factor
+    elseif species == "H2"
+        energy = 0.30f0 * conversion_factor
+    elseif species in ("O", "O(3P)", "O(1D)", "O(1S)", "H(1s)", "H(2s,2p)" , "H" , "H(-)" , "He", "Ne")
+        energy = 0.0f0 * conversion_factor
+    elseif species == "HO2"
+        energy = 0.43f0 * conversion_factor
+    elseif species == "H2O2"
+        energy = 0.45f0 * conversion_factor
+    else
+        energy = nothing
+    end
+
+    return energy
+end
+
+
+"""
+#:: FUNCTION: get_electronic_energy_predis(species)
+-------------------------------------------------------------------------------------------
+# OBJECTIVE:
+- Return the electronic energy [J] for a species in predissociation cases (OH)
+
+# INPUTS:
+- species::String : Species identifier with electronic state
+#   Valid values: "OH(X2π)", "OH", "OH(A2Σ+)", "OH(A2Σ+, v'=2)", "OH(A2Σ+, v'=3)", 
+#                 "OH(1Σ+)", "OH(12Δ/22Π)", "OH(B2Σ)", "OH(D2Σ)"
+
+# OUTPUTS:
+- energy::Float32 : Electronic energy in Joules
+"""
+
+function get_electronic_energy_predis(species::String)
+
+    """
+    Return the electronic energy [J] for the given `species` for predissociation cases.
+    """
+
+    if species == "OH(X2π)" || species == "OH"
+        energy = 0.00f0 * conversion_factor
+    elseif species == "OH(A2Σ+)" || species == "OH(A2Σ+, v'=3)" || species == "OH(A2Σ+, v'=2)"
+        energy = 4.05f0 * conversion_factor
+    elseif species == "OH(1Σ+)"
+        energy = 4.05f0 * conversion_factor
+    elseif species == "OH(12Δ/22Π)"
+        energy = 6.50f0 * conversion_factor
+    elseif species == "OH(B2Σ)"
+        energy = 8.65f0 * conversion_factor
+    elseif species == "OH(D2Σ)"
+        energy = 10.18f0 * conversion_factor
+    else
+        energy = nothing
+    end
+
+    return energy
+end
+
+"""
+#:: FUNCTION: get_masses(parent_name; heavy_child_name=nothing, light_child_name=nothing, mode="PD")
+#-------------------------------------------------------------------------------------------
+# OBJECTIVE:
+- Get masses for the parent and child species involved in a photoreaction
+- For PD (photodissociation): returns masses of parent, heavy child, and light child
+- For PI (photoionization): returns mass of parent only
+
+# INPUTS:
+- parent_name::String : Name of parent species
+- heavy_child_name::Union{String, Nothing} : Name of heavier child species (required for PD)
+- light_child_name::Union{String, Nothing} : Name of lighter child species (required for PD)
+- mode::String : "PD" for photodissociation, "PI" for photoionization
+"""
+
+const m_fund = 1.66054e-27 # 1 M.U.
+const mass_species = ("H", "H(-)", "H2", "O", "OH", "H2O", "HO2", "H2O2", "He", "Ne")
+const mass_dict = (1* m_fund, 1* m_fund, 2 * m_fund, 16 * m_fund, 17 * m_fund, 18 * m_fund, 33 * m_fund, 34 * m_fund, 4 * m_fund, 20 * m_fund)
+
+function get_masses(parent_name; heavy_child_name=nothing, light_child_name=nothing, mode="PD")
+    # Get masses for involved photoreaction
+    # Nomenclature: Usually, water or hydrogen based photoreactions will result in a lighter product (like H, H2) and a heavier product (O, OH)
+
+    m_parent = m_heavy = m_light = 0.0f0
+    m_parent = mass_dict[findfirst(isequal(parent_name), mass_species)]
+
+    if mode == "PI"
+        return m_parent
+    elseif mode == "PD"
+        @assert heavy_child_name !== nothing "heavy_child_name must be provided for PD"
+        @assert light_child_name !== nothing "light_child_name must be provided for PD"
+        m_heavy = mass_dict[findfirst(isequal(heavy_child_name), mass_species)]
+        m_light = mass_dict[findfirst(isequal(light_child_name), mass_species)]
+        return m_parent, m_heavy, m_light
+    end
+end
 
 end
