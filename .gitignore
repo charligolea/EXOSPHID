@@ -24,3 +24,8 @@ docs/site/
 Manifest.toml
 /studies
 src/.DS_Store
+test/.DS_Store
+src/database/species/.DS_Store
+src/database/.DS_Store
+test/database/.DS_Store
+validation/.DS_Store
