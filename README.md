@@ -2,7 +2,7 @@
 **EXOSpheric PHotoIonisation and PhotoDissociation**
 
 Julia-based scientific code library to simulate photodissociation and photoionisation processes in **extraterrestrial exospheres**, with particular focus on **lunar applications** and **hydrogen-bearing species**.  
-Developed as part of the Master's Thesis of **Carlos Gómez de Olea Ballester** at **TU Munich, Professorship of Lunar and Planetary Exploration**, supervised by **Prof. Dr. Philipp Reiss** and advised by **Alexander Peschel** (PhD candidate).
+Developed by **Carlos Gómez de Olea Ballester** at **TU Munich, Professorship of Lunar and Planetary Exploration**, supervised by **Prof. Dr. Philipp Reiss** and advised by **Alexander Peschel** (PhD candidate).
 
 ---
 
@@ -14,12 +14,12 @@ Any chemical species may be added by following the methodology described in the 
 
 - **Core focus**: Reproducing solar-driven destruction pathways of lunar water.  
 - **Extendable**: Can be adapted for other bodies (Mercury, Europa, asteroids).  
-- **Monte Carlo approach**: Stochastic simulation of photon–particle interactions.
+- **Individual particle approach**: Stochastic simulation of photon–particle interactions.
 
 ---
 
 ## 📖 Reference
-The theory behind this model and its lunar-specific mechanisms is described in:  
+The theory behind this model and its lunar-specific mechanisms is described in the [`EXOSPHID` WIKI](https://github.com/charligolea/EXOSPHID/wiki) in:  
 
 > *Photolysis of Lunar Water in the Exosphere and on the Surface*,  
 > Carlos Gómez de Olea Ballester, TU Munich, 2025.  
@@ -31,45 +31,98 @@ Further work will appear in **upcoming publications (2026)**.
 
 ## 📂 Repository Structure
 ```
-├── src/                     # Source code modules
-│   ├── photoreactions.jl    # Reaction definitions
-│   ├── solar_spectrum.jl    # Solar flux & spectrum functions
-│   └── ...
-├── methods/                 # Methodological documentation & species expansion guide
-├── testing/                 # Testing & benchmarking scripts
-│   └── validation.jl
-├── photodestruction_main.jl # Main executable script
-└── README.md                # This file
+├── benchmark/                 
+│   └── benchmark.jl            # Benchmarking scripts
+│
+├── methods/                   
+│   ├── add_new_species.ipynb   # Guide for adding new species
+│   └── Helium_quiet.csv        # Example input dataset
+│
+├── src/
+│   ├── EXOSPHID.jl             # Core module entry point
+│   │
+│   ├── database/               # Data and spectrum modules
+│   │   ├── photodatabase.jl
+│   │   ├── solar_database.jl
+│   │   └── solar_spectrum.jl
+│   │
+│   ├── species/                # Species-specific definitions
+│   │   ├── H2O.jl
+│   │   ├── OH.jl
+│   │   ├── H2.jl
+│   │   ├── H.jl
+│   │   ├── H(-).jl
+│   │   ├── He.jl
+│   │   ├── Ne.jl
+│   │   ├── HO2.jl
+│   │   ├── H2O2.jl
+│   │   └── general_construct.jl
+│   │
+│   ├── main/
+│   │   └── photodestruction_main.jl  # Main execution script
+│   │
+│   ├── photoreactions/         # Reaction logic and definitions
+│   │   ├── SimplePhotodissociation.jl
+│   │   ├── SimplePhotoionisation.jl
+│   │   ├── photodestruction_logic.jl
+│   │   ├── photodestruction_logic_multiple.jl
+│   │   └── photoreactions.jl
+│   │
+│   └── test/                   # Testing and validation
+│       ├── run_tests.jl
+│       ├── photoreactions/
+│       │   ├── SimplePhotodissociation.jl
+│       │   └── SimplePhotoionisation.jl
+│       ├── database/
+│       │   ├── photodatabase.jl
+│       │   ├── solar_database.jl
+│       │   └── solar_spectrum.jl
+│       └── validation/
+│           └── validation.jl
+│
+└── README.md                   # Project overview and documentation
 ```
 
 ---
+---
 
-## 🚀 Usage
-This repository is designed to be integrated with an exospheric framework such as:
+## ⚙️ Installation & Usage
 
-- **Extraterrestrial Exosphere and Surface Simulations (EESS)**  
-  Developed by A. Peschel, TU Munich.  
-  *(contact: a.peschel@tum.de)*
+Please refer to the [official guide](https://julialang.org/downloads/) to installing **Julia** on your machine.  
+The **ExESS.jl** package can be installed using Julia’s package manager **Pkg**:
 
-### 🔧 Main Function: `photodestruction(solar_activity, dt, parent_type, parent_velocity, sun_tuple)`
+```julia
+using Pkg
+Pkg.add(url="https://github.com/charligolea/EXOSPHID.jl.git")
+using EXOSPHID
+```
 
-This script implements the **core simulation engine** for photodestruction of exospheric species within the EXOSPHID framework.  
+If you want to use the latest **development version**, you can install the package as:
 
-It provides a full database of photodestruction pathways for the currently supported **9 atomic and molecular species**, including:  
-- Threshold energies  
-- Branching ratios  
-- Wavelength ranges of all known photodestruction mechanisms  
+```julia
+Pkg.add(url="https://github.com/charligolea/EXOSPHID.jl.git", rev="dev")
+```
 
-These values are sourced from a range of literature (**Huebner 2015**, Combi 2005, Kronebusch & Berkowitz 1976, Lykke 1992) and expanded by Carlos Gómez de Olea Ballester (2025,2026 TU Munich).  
+> ⚠️ **Note:** The development version may contain bugs and is not recommended for general use.
 
-Photodestruction rates are species-dependent and calculated for both quiet and active Sun conditions. Rates are combined with photon fluxes to determine whether a given parent molecule undergoes photon-induced photodestruction. If a photon interaction occurs, photon energy and wavelength are sampled from **species-dependent solar flux data** implemented in `src/solar_spectrum.jl`.
+---
+
+## 📌 Example Usage: `photodestruction(solar_activity, dt, parent_type, parent_velocity, sun_tuple)`
+
+This function implements the **core simulation engine** for photodestruction of exospheric species within the EXOSPHID framework.  
+
+After correctly installing the `EXOSPHID` package on your Julia machine, you can test the function as follows:
+
+```julia
+photodestruction(0, 1e10, "H2O", 550, nothing)
+```
 
 - **Inputs**:
-  - `solar_activity::Float64` : Ratio of solar activity from 0.0 to 1.0, where 0.0 corresponds to Quiet Sun conditions, and 1.0 is for the Active Sun
-  - `dt::Float64/Int64` : Simulation time window [s]
-  - `parent_type::String` : `"H2O"`, `"OH"`, `"H2"`, `"H"`, `"H(-)"`, `"HO2"`, `"H2O2"`, `"He"`, `"Ne"`
-  - `parent_velocity::Tuple{Float64, Float64, Float64}` or `Float64` : Parent velocity [m/s]
-  - `sun_tuple::Tuple{Float64, Float64, Float64}` or `Nothing` : Sun–particle geometry
+  - `solar_activity` : Ratio of solar activity from 0.0 to 1.0, where 0.0 corresponds to Quiet Sun conditions, and 1.0 is for the Active Sun
+  - `dt` : Simulation time window [s]
+  - `parent_type` : `"H2O"`, `"OH"`, `"H2"`, `"H"`, `"H(-)"`, `"HO2"`, `"H2O2"`, `"He"`, `"Ne"`
+  - `parent_velocity`: Parent velocity [m/s]
+  - `sun_tuple`: Solar vector
 
 - **Outputs**:
   - `reaction_occurence::Bool` : True if reaction occurs
@@ -105,49 +158,49 @@ The model accounts for a range of fundamental processes relevant in exospheric e
   *Example:* `H(-) + γ → H(+) + 2e(-)`
 
 
-### 📚 References
+### 📚 Selected References
 - Huebner, W. F. (2015). *Photoionization and photodissociation rates in solar and blackbody radiation fields.*  
 - Huebner, W. F. (1992). *Solar photo rates for planetary atmospheres and atmospheric pollutants.*  
 - Combi, M. R. (2005). *Gas Dynamics and Kinetics in the Cometary Coma: Theory and Observations.*  
 - Kronebusch, D. & Berkowitz, J. (1976). *PHOTODISSOCIATIVE IONIZATION IN THE 21-41 eV REGION: O2, N2, CO, NO, CO2, H2O, NH3 AND CH4.*  
 - Gómez de Olea Ballester, C. (2025). *Photolysis of Lunar Water in the Exosphere and on the Surface*, TU Munich.  
 
----
-
-## 🔗 Integration
-This script is intended for integration with **Extraterrestrial Exosphere and Surface Simulations (EESS)** by A. Peschel.  
-It provides reaction rates and Monte Carlo outcomes for use in higher-level **exospheric transport and dynamics models**.
-
----
-
-## 📌 Example Usage
-```julia
-include("photodestruction_main.jl")
-
-# Example: Calculate reaction probability for H2O under active Sun
-reaction_occurence, reaction_name, products, velocities, wvl_range =
-    photodestruction(1.0, 100.0, "H2O", (0.0, 0.0, 0.0), nothing)
-
-println(reaction_name, products, velocities)
-```
-
----
-
 ## ⚠️ Notes
 - Currently calibrated for 9 species.  
-- Rates and pathways extendable via [`src/photoreactions.jl`](../src/photoreactions.jl).  
+- Rates and pathways extendable via [`src/database/species`](../src/database/species/).  
 - Parameters and branching ratios subject to update in future publications.
 
 ---
 
 ## 🧪 Testing
-Validation and benchmarking examples are provided in [`testing/`](testing/).  
+Testing scripts are provided in [`test/`](test/).  
+These scripts include physics-based analysis as well as numerical tests.
+
+---
+
+## ✅ Validation
+A validation example is provided in [`validation.jl`](validation/validation.jl).  
+This script allows comparisons with published results to ensure reproducibility.
+
+---
+
+## 🧩 Performance
+Benchmarking examples are provided in [`benchmark.jl`](benchmark/benchmark.jl).  
 These scripts include comparisons with published results to ensure reproducibility.
 
 ---
 
+## 🚀 Applications
+This repository can be used independently or be integrated with an exospheric framework such as:
+
+- [**Extraterrestrial Exosphere and Surface Simulations (ExESS)**](https://github.com/Smolkaa/ExESS.jl)
+  Developed by A. Peschel, TU Munich.  
+  *(contact: a.peschel@tum.de)*
+
+---
+
 ## 📜 Citation
-If you use this code, please cite:
+If you use this code, please cite (ADD JOSS PAPER HERE WHEN AVAILABLE):
 
 ```
 Gómez de Olea Ballester, C. (2025). Photolysis of Lunar Water in the Exosphere and on the Surface. 
@@ -158,11 +211,6 @@ Available at: https://mediatum.ub.tum.de/node?id=1784196
 ---
 
 ## 👥 Authors & Contact
-- **Carlos Gómez de Olea Ballester**, 2025  
-  Master’s Thesis, TU Munich  
-
-**Supervised by**: Prof. Dr. Philipp Reiss  
-**Advised by**: Alexander Peschel (PhD candidate, TU Munich)
 
 For questions, please contact:  
 - Carlos Gómez de Olea Ballester (primary), carlos.olea@tum.de  
