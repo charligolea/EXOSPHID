@@ -1,8 +1,8 @@
-# EXOSPHID
-
 <table>
 <tr>
 <td style="vertical-align: top; padding-right: 30px;">
+
+# EXOSPHID
 
 **EXOSpheric PHotoIonisation and PhotoDissociation**
 
@@ -13,7 +13,7 @@ Developed by **Carlos Gómez de Olea Ballester** at **TU Munich, Professorship o
 </td>
 <td style="vertical-align: top;">
 
-<img src="https://github.com/user-attachments/assets/b44495b0-c21e-4c1f-830a-51210dd5b003" alt="EXOSPHID Logo" width="1000"/>
+<img src="https://github.com/user-attachments/assets/b44495b0-c21e-4c1f-830a-51210dd5b003" alt="EXOSPHID Logo" width="500"/>
 
 </td>
 </tr>
