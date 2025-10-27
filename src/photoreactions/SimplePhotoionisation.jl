@@ -1,92 +1,8 @@
-module SimplePhotoionisation
-
-using Random, LinearAlgebra, Distributions, Statistics, DataFrames
-
-const c = 2.99792458f8        # Speed of light in m/s
-const m_el = 9.1093837e-31 # Electron mass in kg
-
-include("../database/photodatabase.jl")
-using .photodatabase
-
-struct PhotoReaction
-    E_ionisation::Float32 # Ionisation threshold energy in J
-    v_parent::NTuple{3, Float32} # Velocity of the parent molecule in m/s (H2O, OH, H2) -> USER INPUT
-    sun_tuple::NTuple{3, Float32} # Solar vector === direction of incoming photons
-    product_names::NTuple{3, String} # USER INPUT -> Dict containing all involved species names. Must contain 3 keys: "parent_name", "heavy_child_name", "light_child_name""
-    product_types::NTuple{3, String} # Extracts (+) from strings for ionic species to get the "clean" string for the atomic species (e.g. H(+) -> H)
-    display_info::Bool # Set true if you want to print photoproduct velocity analysis at the end
-
-    function PhotoReaction(E_ionisation::Real, v_parent::NTuple{3, Float32}, sun_tuple::NTuple{3, Float32}, product_names::NTuple{3, String}, display_info::Bool)
-        product_types = map(s -> replace(s, r"\(.*\)" => ""),product_names)
-        new(Float32(E_ionisation), Float32.(v_parent), Float32.(sun_tuple), product_names, product_types, display_info)
-    end
-
-    function PhotoReaction(E_ionisation::Real, v_parent::Real, sun_tuple::NTuple{3, Real}, product_names::NTuple{3, String}, display_info::Bool)
-        vp = Float32(v_parent) .* random_unit_tuple()
-        PhotoReaction(Float32(E_ionisation), v_parent, Float32.(sun_tuple), product_names, display_info)
-    end
-    
-    function PhotoReaction(E_ionisation::Real, v_parent::NTuple{3, Real}, sun_tuple::Nothing, product_names::NTuple{3, String}, display_info::Bool)
-        PhotoReaction(Float32(E_ionisation), Float32.(v_parent), random_unit_tuple, product_names, display_info)
-    end
-
-    function PhotoReaction(E_ionisation::Real, v_parent::Real, sun_tuple::Nothing, product_names::NTuple{3, String}, display_info::Bool)
-        vp = Float32(v_parent) .* random_unit_tuple()
-        PhotoReaction(Float32(E_ionisation), vp, random_unit_tuple(), product_names, display_info)
-    end
-
-        function PhotoReaction(E_ionisation::Real, v_parent::AbstractArray{<:Real}, sun_tuple::AbstractArray{<:Real}, product_names::NTuple{3, String}, display_info::Bool)
-        @assert length(v_parent) == 3 "v_parent must have length 3"
-        @assert length(sun_tuple) == 3 "sun_tuple must have length 3"
-        vp = Float32.(v_parent)
-        st = Float32.(sun_tuple)
-        PhotoReaction(Float32(E_ionisation), vp, st, product_names, display_info)
-    end
-
-    function PhotoReaction(E_ionisation::Real, v_parent::Real, sun_tuple::AbstractArray{<:Real}, product_names::NTuple{3, String}, display_info::Bool)
-        vp = Float32(v_parent) .* random_unit_tuple()
-        @assert length(sun_tuple) == 3 "sun_tuple must have length 3"
-        st = Float32.(sun_tuple)
-        PhotoReaction(Float32(E_ionisation), vp, st, product_names, display_info)
-    end
-
-    function PhotoReaction(E_ionisation::Real, v_parent::AbstractArray{<:Real}, sun_tuple::Nothing, product_names::NTuple{3, String}, display_info::Bool)
-        @assert length(v_parent) == 3 "v_parent must have length 3"
-        vp = Float32.(v_parent)
-        st = random_unit_tuple()
-        PhotoReaction(Float32(E_ionisation), vp, st, product_names, display_info)
-    end
-
-end
-
-"""
-#:: FUNCTION: random_unit_tuple()
-
-# OBJECTIVE: For the cases where parent velocity has been provided as scalar, or solar vector has not been provided, generate random unitary vector
-"""
-
-function random_unit_tuple()
-    θ, φ = Float32(2π) * rand(Float32), Float32(π) * rand(Float32)
-    return (Float32(sin(φ) * cos(θ)), Float32(sin(φ) * sin(θ)), Float32(cos(φ)))
-end
-
-
 """ 
-#:: FUNCTION: calculate_photon_momentum(E_photon, sun_tuple)
+#:: FUNCTION: calculate_excess_energy_ionisation(E_bond, E_photon)
 #-------------------------------------------------------------------------------------------
 # Arguments
-- E_photon: in J  
-
-# Output: Momentum vector for the photon in kg*m/s
-"""
-
-calculate_photon_momentum(E_photon::Float32, sun_tuple) = (E_photon/c) .* sun_tuple
-
-""" 
-#:: FUNCTION: calculate_excess_energy(E_ionisation, E_photon)
-#-------------------------------------------------------------------------------------------
-# Arguments
-- E_ionisation:: Ionisation energy in J
+- E_bond:: Ionisation energy in J
 - E_photon in J
 
 # OBJECTIVE: 
@@ -96,12 +12,12 @@ calculate_photon_momentum(E_photon::Float32, sun_tuple) = (E_photon/c) .* sun_tu
 # Output: Excess energy in J
 """
 
-calculate_excess_energy(E_ionisation::Float32, E_photon::Float32) = E_photon - E_ionisation
+calculate_excess_energy_ionisation(E_bond::Float32, E_photon::Float32) = E_photon - E_bond
 
 
 
 """ 
-#:: FUNCTION: allocate_velocity(reaction, E_excess, species_masses, p_photon)
+#:: FUNCTION: allocate_velocity_ionisation(reaction, E_excess, species_masses, p_photon)
 #-------------------------------------------------------------------------------------------
 # Arguments
 - reaction:: PhotoReaction object
@@ -117,7 +33,7 @@ calculate_excess_energy(E_ionisation::Float32, E_photon::Float32) = E_photon - E
 - v_ion_tuple: 3D Tuple containing velocity components for the ionised parent
 """
 
-function allocate_velocity(reaction::PhotoReaction, E_excess, species_masses::Float64, p_photon)
+function allocate_velocity_ionisation(reaction::PhotoReaction, E_excess, species_masses::Float64, p_photon)
 
     # 1. Get unitary vector for photon
     u_ph = reaction.sun_tuple
@@ -170,10 +86,10 @@ function simulate_photoionisation(reaction::PhotoReaction, E_photon::Float32)
     species_masses = get_masses(reaction.product_types[1]; mode="PI")
 
     # 3. Calculate excess energy for reaction (J)
-    E_excess = calculate_excess_energy(reaction.E_ionisation, E_photon)
+    E_excess = calculate_excess_energy_ionisation(reaction.E_bond, E_photon)
 
     # 4. Calculate velocity of product ion
-    v_ion_tuple = allocate_velocity(reaction, E_excess, species_masses, p_photon)
+    v_ion_tuple = allocate_velocity_ionisation(reaction, E_excess, species_masses, p_photon)
 
     return v_ion_tuple
 end
@@ -210,7 +126,7 @@ function multiple_photoionisation(reaction::PhotoReaction, energy_vector::Vector
     # 1. Loop over photon energy vector
     for E_photon in energy_vector
 
-        if E_photon > reaction.E_ionisation
+        if E_photon > reaction.E_bond
             # 1.1. Simulate individual photoreaction for every incoming photon
             v_ion_tuple= simulate_photoionisation(reaction, E_photon)
 
@@ -222,7 +138,7 @@ function multiple_photoionisation(reaction::PhotoReaction, energy_vector::Vector
 
     # 2. Show mean, STD and median speeds for product ions
     if reaction.display_info
-        show_info(reaction, final_speeds_ion)
+        show_info_ionisation(reaction, final_speeds_ion)
     end
 
     return final_speeds_ion
@@ -245,7 +161,7 @@ end
 - Only if display_info is set true
 """
 
-function show_info(reaction::PhotoReaction, final_speeds_ion)
+function show_info_ionisation(reaction::PhotoReaction, final_speeds_ion)
     final_speeds_ion_norm = [norm(p) for p in final_speeds_ion]
 
     data_speeds = DataFrame(
@@ -257,4 +173,9 @@ function show_info(reaction::PhotoReaction, final_speeds_ion)
     println("")
 end
 
-end
+
+export calculate_excess_energy_ionisation
+export allocate_velocity_ionisation
+export simulate_photoionisation
+export multiple_photoionisation
+export show_info_ionisation

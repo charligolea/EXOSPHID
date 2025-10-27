@@ -1,4 +1,4 @@
-include((joinpath(@__DIR__, "general_construct.jl")))
+# include((joinpath(@__DIR__, "general_construct.jl")))
 """
 ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 # H Database
@@ -69,3 +69,5 @@ H = Species(
     rt_H,
     wv_H
 )
+
+export H

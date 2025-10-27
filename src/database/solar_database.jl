@@ -1,12 +1,3 @@
-module solar_database
-
-include("../../src/database/photodatabase.jl")
-using .photodatabase
-
-export get_normalized_fluxes
-export get_standard_fluxes
-export solar_wavelength
-
 # Wavelength in Angstroms (A) from Huebner (2015)
 const solar_wavelength = 
     Tuple(map(Int32, 
@@ -848,4 +839,12 @@ function get_standard_fluxes(parent_type::String)
     end
 end
 
-end
+
+# ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+# EXPORTS
+# ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+export get_normalized_fluxes
+export get_standard_fluxes
+
+export solar_wavelength

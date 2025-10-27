@@ -1,17 +1,4 @@
-module solar_spectrum
-
-using Interpolations
-
-include(joinpath(@__DIR__, "solar_database.jl"))
-using .solar_database
-include("../../src/database/photodatabase.jl")
-using .photodatabase
-
-export flux_outputs
-
-const c = 299792458 # Speed of light in m/s
 const h  = 6.62607015f-34 # m2 kg / s
-
 
 """ 
 #:: FUNCTION: normalize_flux_distribution(wavelengths, solar_fluxes, wvl_range)
@@ -207,4 +194,6 @@ function flux_outputs(parent_type::String, wvl_range::Tuple{<:Real,<:Real}, sola
     return flux_outputs(parent_type, Float64.(Tuple(wvl_range)), Float32(solar_activity), num_reactions)
 end
 
-end
+
+export flux_outputs
+export normalize_flux_distribution

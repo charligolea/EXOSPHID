@@ -1,4 +1,4 @@
-include((joinpath(@__DIR__, "general_construct.jl")))
+# include((joinpath(@__DIR__, "general_construct.jl")))
 """
 ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 # Ne Database
@@ -70,3 +70,5 @@ Ne = Species(
     rt_Ne,
     wv_Ne
 )
+
+export Ne

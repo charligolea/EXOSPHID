@@ -1,7 +1,6 @@
-"""include("../database/photodatabase.jl")
-using .photodatabase"""
-
-include("../database/species/general_construct.jl")
+# ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+# FUNCTIONS
+# ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 
 """
 #:: Various functions to unpack photochemical_info
@@ -34,8 +33,8 @@ energy_to_J(energy) = 1.602f-19 * energy
 
 function SPD_logic(photon_energy::Float32, species_name::NTuple{3, String}, tsh_energy::Float32, parent_velocity::NTuple{3, Float32}, sun_tuple::NTuple{3, Float32})
     product_names = map(s -> replace(s, r"\((?!\+).*?\)" => ""), species_name)
-    reaction = SimplePhotodissociation.PhotoReaction(energy_to_J(tsh_energy), parent_velocity, sun_tuple, species_name, false)
-    final_speeds_light, final_speeds_heavy = SimplePhotodissociation.simulate_photodissociation(reaction, photon_energy)
+    reaction = PhotoReaction(energy_to_J(tsh_energy), parent_velocity, sun_tuple, species_name, false)
+    final_speeds_light, final_speeds_heavy = simulate_photodissociation(reaction, photon_energy)
     
     product_types = [product_names[2], product_names[3]]
     product_velocities = [final_speeds_heavy, final_speeds_light]
@@ -44,11 +43,11 @@ function SPD_logic(photon_energy::Float32, species_name::NTuple{3, String}, tsh_
 end
 
 function DPD_logic(photon_energy::Float32, species_name::NTuple{2, NTuple{3, String}}, tsh_energy::NTuple{2, Float32}, parent_velocity::NTuple{3, Float32}, sun_tuple::NTuple{3, Float32})
-    reaction = SimplePhotodissociation.PhotoReaction(energy_to_J(tsh_energy[1]), parent_velocity, sun_tuple, species_name[1], false)
-    final_speeds_light_1, final_speeds_heavy_old = SimplePhotodissociation.simulate_photodissociation(reaction, photon_energy)
+    reaction = PhotoReaction(energy_to_J(tsh_energy[1]), parent_velocity, sun_tuple, species_name[1], false)
+    final_speeds_light_1, final_speeds_heavy_old = simulate_photodissociation(reaction, photon_energy)
 
-    reaction = SimplePhotodissociation.PhotoReaction(energy_to_J(tsh_energy[2]), map(Float32, final_speeds_heavy_old), sun_tuple, species_name[2], false)
-    final_speeds_light_2, final_speeds_heavy = SimplePhotodissociation.simulate_photodissociation(reaction, photon_energy)
+    reaction = PhotoReaction(energy_to_J(tsh_energy[2]), map(Float32, final_speeds_heavy_old), sun_tuple, species_name[2], false)
+    final_speeds_light_2, final_speeds_heavy = simulate_photodissociation(reaction, photon_energy)
     
     product_types = ["O", "H", "H"]
     product_velocities = [final_speeds_heavy, final_speeds_light_1, final_speeds_light_2]
@@ -57,32 +56,32 @@ function DPD_logic(photon_energy::Float32, species_name::NTuple{2, NTuple{3, Str
 end
 
 function SPI_logic(photon_energy::Float32, species_name::NTuple{3, String}, tsh_energy::Float32, parent_velocity::NTuple{3, Float32}, sun_tuple::NTuple{3, Float32})
-    reaction = SimplePhotoionisation.PhotoReaction(energy_to_J(tsh_energy), parent_velocity, sun_tuple, species_name, false)
-    product_velocities = [SimplePhotoionisation.simulate_photoionisation(reaction, photon_energy)]
+    reaction = PhotoReaction(energy_to_J(tsh_energy), parent_velocity, sun_tuple, species_name, false)
+    product_velocities = [simulate_photoionisation(reaction, photon_energy)]
     product_types = [species_name[2]]
 
     return product_velocities, product_types
 end
 
 function DPI_logic(photon_energy::Float32, species_name::NTuple{2, NTuple{3, String}}, tsh_energy::NTuple{2, Float32}, parent_velocity::NTuple{3, Float32}, sun_tuple::NTuple{3, Float32})
-    reaction = SimplePhotoionisation.PhotoReaction(energy_to_J(tsh_energy[1]), parent_velocity, sun_tuple, species_name[1], false)
-    final_speeds_ion = SimplePhotoionisation.simulate_photoionisation(reaction, photon_energy)
+    reaction = PhotoReaction(energy_to_J(tsh_energy[1]), parent_velocity, sun_tuple, species_name[1], false)
+    final_speeds_ion = simulate_photoionisation(reaction, photon_energy)
 
-    reaction = SimplePhotoionisation.PhotoReaction(energy_to_J(tsh_energy[2]), map(Float32, final_speeds_ion), sun_tuple, species_name[2], false)
-    product_velocities = [SimplePhotoionisation.simulate_photoionisation(reaction, photon_energy)]
+    reaction = PhotoReaction(energy_to_J(tsh_energy[2]), map(Float32, final_speeds_ion), sun_tuple, species_name[2], false)
+    product_velocities = [simulate_photoionisation(reaction, photon_energy)]
     product_types = [species_name[2][2]]
 
     return product_velocities, product_types
 end
 
 function DiPI_logic(photon_energy::Float32, species_name::NTuple{2, NTuple{3, String}}, tsh_energy::NTuple{2, Float32}, parent_velocity::NTuple{3, Float32}, sun_tuple::NTuple{3, Float32})
-    reaction = SimplePhotoionisation.PhotoReaction(energy_to_J(tsh_energy[1]), parent_velocity, sun_tuple, species_name[1], false)
-    final_speeds_ion = SimplePhotoionisation.simulate_photoionisation(reaction, photon_energy)
+    reaction = PhotoReaction(energy_to_J(tsh_energy[1]), parent_velocity, sun_tuple, species_name[1], false)
+    final_speeds_ion = simulate_photoionisation(reaction, photon_energy)
 
     product_names = map(s -> replace(s, r"\(\+\)" => ""), species_name[2])
     
-    reaction = SimplePhotodissociation.PhotoReaction(energy_to_J(tsh_energy[2]), map(Float32, final_speeds_ion), sun_tuple, product_names, false)
-    final_speeds_light, final_speeds_heavy = SimplePhotodissociation.simulate_photodissociation(reaction, photon_energy)
+    reaction = PhotoReaction(energy_to_J(tsh_energy[2]), map(Float32, final_speeds_ion), sun_tuple, product_names, false)
+    final_speeds_light, final_speeds_heavy = simulate_photodissociation(reaction, photon_energy)
     
     product_velocities = [final_speeds_heavy, final_speeds_light]
     product_types = [species_name[2][2], species_name[2][3]]
@@ -106,7 +105,7 @@ end
 - photon_energy: in J
 """
 
-function call_photodestruction_logic(current_reaction, photochemical_info, parent_velocity::NTuple{3, Float32}, sun_tuple::NTuple{3, Float32}, photon_energy::Real)
+function call_photodestruction_logic(current_reaction::CurrentReaction, photochemical_info::Species, parent_velocity::NTuple{3, Float32}, sun_tuple::NTuple{3, Float32}, photon_energy::Real)
 
     pr = current_reaction.present_reaction
     r_idx = current_reaction.reaction_index
@@ -136,3 +135,9 @@ function call_photodestruction_logic(current_reaction, photochemical_info, paren
     end
 
 end
+
+
+# ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+# EXPORTS
+# ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+export call_photodestruction_logic

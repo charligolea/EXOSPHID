@@ -1,21 +1,12 @@
 using Test
 using LinearAlgebra
 
-include("../../src/photoreactions/SimplePhotoionisation.jl")
-import .SimplePhotoionisation as SI
-
-include("../../src/database/photodatabase.jl")
-using .photodatabase
-
-include("../../src/database/solar_spectrum.jl")
-import .solar_spectrum as SS
-
 const eV_to_J = 1.602f-19
 
 @testset verbose=true "SimplePhotoionisation.jl" begin
 
     @testset verbose=true "random_unit_tuple()" begin
-        v = SI.random_unit_tuple()
+        v = random_unit_tuple()
         
         # Type correctness
         @test v isa Tuple{Float32,Float32,Float32}
@@ -24,7 +15,7 @@ const eV_to_J = 1.602f-19
         @test isapprox(norm(collect(v)), 1f0; atol=1e-5)
 
         # Randomness (different outputs)
-        v2 = SI.random_unit_tuple()
+        v2 = random_unit_tuple()
         @test v != v2  # Not guaranteed, but likely true
     end
 
@@ -32,7 +23,7 @@ const eV_to_J = 1.602f-19
         c = 2.99792458f8
         E = 1.0f0
         direction = (1f0, 0f0, 0f0)
-        p = SI.calculate_photon_momentum(E, direction)
+        p = calculate_photon_momentum(E, direction)
 
         # Type check
         @test p isa Tuple{Float32,Float32,Float32}
@@ -60,8 +51,8 @@ const eV_to_J = 1.602f-19
                 rts = photo_info.reaction_types
                 wrs = photo_info.wavelength_range
 
-                vp = Float32(vps[pt]) .* SI.random_unit_tuple()
-                st = SI.random_unit_tuple()
+                vp = Float32(vps[pt]) .* random_unit_tuple()
+                st = random_unit_tuple()
                 mp = get_masses(pt, mode="PI")
 
                 for (i, rt) in enumerate(rts)
@@ -73,25 +64,25 @@ const eV_to_J = 1.602f-19
                         for (wi, wr) in enumerate(wrs)
                             if rps[i][wi] != 0.0
                                 @testset verbose=false "Reaction: $rn | Wavelength range: $wr" begin
-                                    wvls, energs = SS.flux_outputs(pt, wr, sa, num_reactions)
+                                    wvls, energs = flux_outputs(pt, wr, sa, num_reactions)
 
                                     if rt == "SPI"
                                         tsh = tshs[i] * eV_to_J
                                         pn = sns[i]
-                                        r1 = SI.PhotoReaction(tsh, vp, st, pn, false)
+                                        r1 = PhotoReaction(tsh, vp, st, pn, false)
 
                                         @testset "Positive Excess Energy" begin
                                             for Ep in energs
-                                                Ee = SI.calculate_excess_energy(tsh, Ep)
+                                                Ee = calculate_excess_energy_ionisation(tsh, Ep)
                                                 @test Ee >= 0
                                             end
                                         end
 
                                         @testset "Non-zero Velocity Allocation" begin
                                             for Ep in energs
-                                                Ee = SI.calculate_excess_energy(tsh, Ep)
-                                                pp = SI.calculate_photon_momentum(Ep, st)
-                                                vion = SI.allocate_velocity(r1, Ee, mp, pp)
+                                                Ee = calculate_excess_energy_ionisation(tsh, Ep)
+                                                pp = calculate_photon_momentum(Ep, st)
+                                                vion = allocate_velocity_ionisation(r1, Ee, mp, pp)
                                                 tol = 1e-6
                                                 @test (Ee==0 && norm(vion)) || (Ee != 0 && (norm(vion) !=0))
                                             end
@@ -103,11 +94,11 @@ const eV_to_J = 1.602f-19
 
                                         tsh = tshs[i][1] * eV_to_J
                                         pn = sns[i][1]
-                                        r1 = SI.PhotoReaction(tsh, vp, st, pn, false)
+                                        r1 = PhotoReaction(tsh, vp, st, pn, false)
 
                                         @testset "First Step: Excess Energy" begin
                                             for Ep in energs
-                                                Ee = SI.calculate_excess_energy(tsh, Ep)
+                                                Ee = calculate_excess_energy_ionisation(tsh, Ep)
                                                 @test Ee >= 0
                                             end
                                         end
@@ -116,9 +107,9 @@ const eV_to_J = 1.602f-19
 
                                         @testset "First Step: Velocity Allocation" begin
                                             for Ep in energs
-                                                Ee = SI.calculate_excess_energy(tsh, Ep)
-                                                pp = SI.calculate_photon_momentum(Ep, st)
-                                                vion = SI.allocate_velocity(r1, Ee, mp, pp)
+                                                Ee = calculate_excess_energy_ionisation(tsh, Ep)
+                                                pp = calculate_photon_momentum(Ep, st)
+                                                vion = allocate_velocity_ionisation(r1, Ee, mp, pp)
                                                 vion_aux = vion
                                                 tol = 1e-6
                                                 @test (Ee==0 && norm(vion) < tol) || (Ee != 0 && (norm(vion) !=0))
@@ -129,20 +120,20 @@ const eV_to_J = 1.602f-19
                                         tsh = tshs[i][2] * eV_to_J
                                         pn = sns[i][2]
                                         vp2 = map(Float32, vion_aux)
-                                        r2 = SI.PhotoReaction(tsh, vp2, st, pn, false)
+                                        r2 = PhotoReaction(tsh, vp2, st, pn, false)
 
                                         @testset "Second Step: Excess Energy" begin
                                             for Ep in energs
-                                                Ee = SI.calculate_excess_energy(tsh, Ep)
+                                                Ee = calculate_excess_energy_ionisation(tsh, Ep)
                                                 @test Ee >= 0
                                             end
                                         end
 
                                         @testset "Second Step: Velocity Allocation" begin
                                             for Ep in energs
-                                                Ee = SI.calculate_excess_energy(tsh, Ep)
-                                                pp = SI.calculate_photon_momentum(Ep, st)
-                                                vion = SI.allocate_velocity(r2, Ee, mp, pp)
+                                                Ee = calculate_excess_energy_ionisation(tsh, Ep)
+                                                pp = calculate_photon_momentum(Ep, st)
+                                                vion = allocate_velocity_ionisation(r2, Ee, mp, pp)
                                                 tol = 1e-6
                                                 @test (Ee==0 && norm(vion) < tol) || (Ee != 0 && norm(vion) !=0)
                                             end
@@ -185,8 +176,8 @@ const eV_to_J = 1.602f-19
                 rts = photo_info.reaction_types
                 wrs = photo_info.wavelength_range
 
-                vp = Float32(vps[pt]) .* SI.random_unit_tuple()
-                st = SI.random_unit_tuple()
+                vp = Float32(vps[pt]) .* random_unit_tuple()
+                st = random_unit_tuple()
                 mp = get_masses(pt, mode="PI")
 
                 for (i, rt) in enumerate(rts)
@@ -198,15 +189,15 @@ const eV_to_J = 1.602f-19
                         for (wi, wr) in enumerate(wrs)
                             if rps[i][wi] != 0.0
                                 @testset verbose=false "Reaction: $rn | Wavelength range: $wr" begin
-                                    wvls, energs = SS.flux_outputs(pt, wr, sa, num_reactions)
+                                    wvls, energs = flux_outputs(pt, wr, sa, num_reactions)
 
                                     if rt == "SPI"
                                         tsh = tshs[i] * eV_to_J
                                         pn = sns[i]
-                                        r1 = SI.PhotoReaction(tsh, vp, st, pn, false)
+                                        r1 = PhotoReaction(tsh, vp, st, pn, false)
 
                                         for Ep in energs
-                                            @test SI.simulate_photoionisation(r1, Ep) isa NTuple{3, Float32}
+                                            @test simulate_photoionisation(r1, Ep) isa NTuple{3, Float32}
                                         end
 
                                     elseif rt == "DPI"
@@ -215,12 +206,12 @@ const eV_to_J = 1.602f-19
 
                                         tsh = tshs[i][1] * eV_to_J
                                         pn = sns[i][1]
-                                        r1 = SI.PhotoReaction(tsh, vp, st, pn, false)
+                                        r1 = PhotoReaction(tsh, vp, st, pn, false)
 
                                         vion = zeros(Float32, 3)
 
                                         for Ep in energs
-                                            vion = SI.simulate_photoionisation(r1, Ep)
+                                            vion = simulate_photoionisation(r1, Ep)
                                             @test vion isa NTuple{3, Float32}
                                         end
 
@@ -229,10 +220,10 @@ const eV_to_J = 1.602f-19
                                         tsh = tshs[i][2] * eV_to_J
                                         pn = sns[i][2]
                                         vp2 = map(Float32, vion)
-                                        r2 = SI.PhotoReaction(tsh, vp2, st, pn, false)
+                                        r2 = PhotoReaction(tsh, vp2, st, pn, false)
 
                                         for Ep in energs
-                                            @test SI.simulate_photoionisation(r2, Ep) isa NTuple{3, Float32}
+                                            @test simulate_photoionisation(r2, Ep) isa NTuple{3, Float32}
                                         end
 
                                     end
@@ -272,8 +263,8 @@ const eV_to_J = 1.602f-19
                 rts = photo_info.reaction_types
                 wrs = photo_info.wavelength_range
 
-                vp = Float32(vps[pt]) .* SI.random_unit_tuple()
-                st = SI.random_unit_tuple()
+                vp = Float32(vps[pt]) .* random_unit_tuple()
+                st = random_unit_tuple()
                 mp = get_masses(pt, mode="PI")
 
                 for (i, rt) in enumerate(rts)
@@ -285,13 +276,13 @@ const eV_to_J = 1.602f-19
                         for (wi, wr) in enumerate(wrs)
                             if rps[i][wi] != 0.0
                                 @testset verbose=false "Reaction: $rn | Wavelength range: $wr" begin
-                                    wvls, energs = SS.flux_outputs(pt, wr, sa, num_reactions)
+                                    wvls, energs = flux_outputs(pt, wr, sa, num_reactions)
 
                                     if rt == "SPI"
                                         tsh = tshs[i] * eV_to_J
                                         pn = sns[i]
-                                        r1 = SI.PhotoReaction(tsh, vp, st, pn, false)
-                                        vel = SI.multiple_photoionisation(r1, energs) 
+                                        r1 = PhotoReaction(tsh, vp, st, pn, false)
+                                        vel = multiple_photoionisation(r1, energs) 
                                         @test all(x -> x isa NTuple{3, Float32}, vel)
                                         @test length(vel) == num_reactions
 
@@ -301,9 +292,9 @@ const eV_to_J = 1.602f-19
 
                                         tsh = tshs[i][1] * eV_to_J
                                         pn = sns[i][1]
-                                        r1 = SI.PhotoReaction(tsh, vp, st, pn, false)
+                                        r1 = PhotoReaction(tsh, vp, st, pn, false)
 
-                                        vel = SI.multiple_photoionisation(r1, energs) 
+                                        vel = multiple_photoionisation(r1, energs) 
                                         @test all(x -> x isa NTuple{3, Float32}, vel)
                                         @test length(vel) == num_reactions
 
@@ -312,9 +303,9 @@ const eV_to_J = 1.602f-19
                                         tsh = tshs[i][2] * eV_to_J
                                         pn = sns[i][2]
                                         vp2 = map(Float32, vel[end])
-                                        r2 = SI.PhotoReaction(tsh, vp2, st, pn, false)
+                                        r2 = PhotoReaction(tsh, vp2, st, pn, false)
 
-                                        vel = SI.multiple_photoionisation(r2, energs) 
+                                        vel = multiple_photoionisation(r2, energs) 
                                         @test all(x -> x isa NTuple{3, Float32}, vel)
                                         @test length(vel) == num_reactions
 

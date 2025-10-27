@@ -15,3 +15,5 @@ struct Species
     reaction_types::Tuple
     wavelength_range::Tuple
 end
+
+export Species

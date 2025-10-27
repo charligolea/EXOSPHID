@@ -1,14 +1,3 @@
-using Test
-
-include(joinpath(@__DIR__, "../../src/database/solar_database.jl"))
-using .solar_database
-
-include(joinpath(@__DIR__, "../../src/database/solar_spectrum.jl"))
-using .solar_spectrum
-
-include(joinpath(@__DIR__, "../../src/database/photodatabase.jl"))
-using .photodatabase
-
 @testset verbose=true "solar_database.jl" begin
 
     # Even if you select a smaller range check that sorted and same size
@@ -57,8 +46,8 @@ using .photodatabase
             nq, na = get_normalized_fluxes(pt)
 
             @testset "$pt" begin
-                @test all(isapprox.(nq, solar_spectrum.normalize_flux_distribution(solar_wavelength, sq, (1, 95000))[2] ; rtol=1e-6))
-                @test all(isapprox.(na, solar_spectrum.normalize_flux_distribution(solar_wavelength, sa, (1, 95000))[2] ; rtol=1e-6))
+                @test all(isapprox.(nq, normalize_flux_distribution(solar_wavelength, sq, (1, 95000))[2] ; rtol=1e-6))
+                @test all(isapprox.(na, normalize_flux_distribution(solar_wavelength, sa, (1, 95000))[2] ; rtol=1e-6))
             end
         end
     end

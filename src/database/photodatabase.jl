@@ -1,23 +1,27 @@
-module photodatabase
-
-using Distributions
-
-export get_photodestruction_rates
-export is_photoreaction_occuring
-export get_wvl_threshold
-export get_species_photochemical_info
-export get_current_reaction
-export get_vibrorotational_energy
-export get_electronic_energy_predis
-export get_masses
-export get_wavelength_range
+# ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+# CONSTANTS
+# ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 
 const exosphid_species = ("H2O", "OH", "H2", "H", "H(-)", "HO2", "H2O2", "He", "Ne")
-export exosphid_species
 
-for parent in exosphid_species
-    include(joinpath(@__DIR__, "species/$parent.jl"))
+const c = 2.99792458f8        # Speed of light in m/s
+const m_el = 9.1093837e-31    # Electron mass in kg
+const m_fund = 1.66054e-27 # 1 M.U.
+const conversion_factor = 1.602f-19
+
+const mass_species = ("H", "H(-)", "H2", "O", "OH", "H2O", "HO2", "H2O2", "He", "Ne")
+const mass_dict = (1* m_fund, 1* m_fund, 2 * m_fund, 16 * m_fund, 17 * m_fund, 18 * m_fund, 33 * m_fund, 34 * m_fund, 4 * m_fund, 20 * m_fund)
+
+struct CurrentReaction
+    present_reaction::String
+    reaction_name::String
+    reaction_index::Int
+    wvl_range::Tuple
 end
+
+# ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+# FUNCTIONS
+# ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 
 """
 #:: FUNCTION: get_photodestruction_rates(species, solar_activity)
@@ -181,13 +185,6 @@ get_reaction_type(ph_info::Species, reaction_index) = ph_info.reaction_types[rea
 get_wavelength_range(ph_info::Species) = ph_info.wavelength_range
 
 
-struct CurrentReaction
-    present_reaction::String
-    reaction_name::String
-    reaction_index::Int
-    wvl_range::Tuple
-end
-
 function get_current_reaction(photon_wvl::Real, photochemical_info::Species)
 
     wavelength_range = get_wavelength_range(photochemical_info)
@@ -222,8 +219,6 @@ end
 # OUTPUTS:
 - energy::Float32 : Vibro-rotational energy in Joules
 """
-
-const conversion_factor = 1.602f-19
 
 function get_vibrorotational_energy(species::String)
 
@@ -321,10 +316,6 @@ end
 - mode::String : "PD" for photodissociation, "PI" for photoionization
 """
 
-const m_fund = 1.66054e-27 # 1 M.U.
-const mass_species = ("H", "H(-)", "H2", "O", "OH", "H2O", "HO2", "H2O2", "He", "Ne")
-const mass_dict = (1* m_fund, 1* m_fund, 2 * m_fund, 16 * m_fund, 17 * m_fund, 18 * m_fund, 33 * m_fund, 34 * m_fund, 4 * m_fund, 20 * m_fund)
-
 function get_masses(parent_name; heavy_child_name=nothing, light_child_name=nothing, mode="PD")
     # Get masses for involved photoreaction
     # Nomenclature: Usually, water or hydrogen based photoreactions will result in a lighter product (like H, H2) and a heavier product (O, OH)
@@ -343,4 +334,22 @@ function get_masses(parent_name; heavy_child_name=nothing, light_child_name=noth
     end
 end
 
-end
+
+# ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+# EXPORTS
+# ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+export get_photodestruction_rates
+export is_photoreaction_occuring
+export get_wvl_threshold
+export get_species_photochemical_info
+export get_current_reaction
+export get_vibrorotational_energy
+export get_electronic_energy_predis
+export get_masses
+export get_wavelength_range
+
+export exosphid_species
+export c, m_el
+export mass_species, mass_dict
+export CurrentReaction

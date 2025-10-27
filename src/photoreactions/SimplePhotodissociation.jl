@@ -1,91 +1,9 @@
-module SimplePhotodissociation
-
-using Random, LinearAlgebra, Distributions, Statistics, DataFrames
-
-include("../database/photodatabase.jl")
-using .photodatabase
-
-const c = 2.99792458f8        # Speed of light in m/s
-
-struct PhotoReaction
-    E_bond::Float32 # Threshold energy for given photodissociation reaction in J -> USER INPUT
-    v_parent::NTuple{3, Float32} # Velocity of the parent molecule in m/s (H2O, OH, H2) -> USER INPUT
-    sun_tuple::NTuple{3, Float32} # Solar vector === direction of incoming photons
-    product_names::NTuple{3, String} # USER INPUT -> Dict containing all involved species names. Must contain 3 keys: "parent_name", "heavy_child_name", "light_child_name""
-    product_types::NTuple{3, String} # Extracts elements in parenthesis, duch as electronic states, from product names (e.g. OH(X^2Pi) -> OH)
-    display_info::Bool # Set true if you want to print photoproduct velocity analysis at the end
-
-    function PhotoReaction(E_bond::Real, v_parent::NTuple{3, Float32}, sun_tuple::NTuple{3, Float32}, product_names::NTuple{3, String}, display_info::Bool)
-        product_types = map(s -> replace(s, r"\(.*\)" => ""),product_names)
-        new(Float32(E_bond), Float32.(v_parent), Float32.(sun_tuple), product_names, product_types, display_info)
-    end
-
-    function PhotoReaction(E_bond::Real, v_parent::Real, sun_tuple::NTuple{3, Real}, product_names::NTuple{3, String}, display_info::Bool)
-        vp = Float32(v_parent) .* random_unit_tuple()
-        PhotoReaction(Float32(E_bond), vp, Float32.(sun_tuple), product_names, display_info)
-    end
-    
-    function PhotoReaction(E_bond::Real, v_parent::NTuple{3, Real}, sun_tuple::Nothing, product_names::NTuple{3, String}, display_info::Bool)
-        st = random_unit_tuple()
-        PhotoReaction(Float32(E_bond), Float32.(v_parent), st, product_names, display_info)
-    end
-
-    function PhotoReaction(E_bond::Real, v_parent::Real, sun_tuple::Nothing, product_names::NTuple{3, String}, display_info::Bool)
-        vp = Float32(v_parent) .* random_unit_tuple()
-        st = random_unit_tuple()
-        PhotoReaction(Float32(E_bond), vp, st, product_names, display_info)
-    end
-
-    function PhotoReaction(E_bond::Real, v_parent::AbstractArray{<:Real}, sun_tuple::AbstractArray{<:Real}, product_names::NTuple{3, String}, display_info::Bool)
-        @assert length(v_parent) == 3 "v_parent must have length 3"
-        @assert length(sun_tuple) == 3 "sun_tuple must have length 3"
-        vp = Float32.(v_parent)
-        st = Float32.(sun_tuple)
-        PhotoReaction(Float32(E_bond), vp, st, product_names, display_info)
-    end
-
-    function PhotoReaction(E_bond::Real, v_parent::Real, sun_tuple::AbstractArray{<:Real}, product_names::NTuple{3, String}, display_info::Bool)
-        vp = Float32(v_parent) .* random_unit_tuple()
-        @assert length(sun_tuple) == 3 "sun_tuple must have length 3"
-        st = Float32.(sun_tuple)
-        PhotoReaction(Float32(E_bond), vp, st, product_names, display_info)
-    end
-
-    function PhotoReaction(E_bond::Real, v_parent::AbstractArray{<:Real}, sun_tuple::Nothing, product_names::NTuple{3, String}, display_info::Bool)
-        @assert length(v_parent) == 3 "v_parent must have length 3"
-        vp = Float32.(v_parent)
-        st = random_unit_tuple()
-        PhotoReaction(Float32(E_bond), vp, st, product_names, display_info)
-    end
-
-end
-
-"""
-#:: FUNCTION: random_unit_tuple()
-
-# OBJECTIVE: For the cases where parent velocity has been provided as scalar, or solar vector has not been provided, generate random unitary vector
-"""
-
-function random_unit_tuple()
-    θ, φ = Float32(2π) * rand(Float32), Float32(π) * rand(Float32)
-    return (Float32(sin(φ) * cos(θ)), Float32(sin(φ) * sin(θ)), Float32(cos(φ)))
-end
-
+# ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+# FUNCTIONS
+# ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 
 """ 
-#:: FUNCTION: calculate_photon_momentum(E_photon, sun_tuple)
-#-------------------------------------------------------------------------------------------
-# Arguments
-- E_photon: in J  
-
-# Output: Momentum vector for the photon in kg*m/s
-"""
-
-calculate_photon_momentum(E_photon::Real, sun_tuple::NTuple{3, Float32}) = (E_photon/c) .* sun_tuple
-
-
-""" 
-#:: FUNCTION: calculate_excess_energy(reaction, m_parent, E_photon)
+#:: FUNCTION: calculate_excess_energy_dissociation(reaction, m_parent, E_photon)
 #-------------------------------------------------------------------------------------------
 # Arguments
 - reaction:: PhotoReaction object
@@ -100,7 +18,7 @@ predissociation and simulation chocies for EXOSPHID, refer to WIKI
 # Output: Excess energy in J
 """
 
-function calculate_excess_energy(reaction::PhotoReaction, m_parent::Float64, E_photon::Real)
+function calculate_excess_energy_dissociation(reaction::PhotoReaction, m_parent::Float64, E_photon::Real)
 
     if reaction.product_types[1] == "OH" && reaction.product_names[1] != "OH(DPD)"
         E_parent = 0.5f0 * m_parent * norm(reaction.v_parent)^2
@@ -135,7 +53,7 @@ end
 - v_light_tuple: 3D Tuple containing velocity components for the lighter photolysis product (e.g., for H2O -> OH + H, it would be H)
 """
 
-function allocate_velocity(reaction::PhotoReaction, E_excess, species_masses, p_photon)
+function allocate_velocity_dissociation(reaction::PhotoReaction, E_excess, species_masses, p_photon)
 
     # 1. Get unitary vector for photon
     u_ph = reaction.sun_tuple
@@ -189,10 +107,10 @@ function simulate_photodissociation(reaction::PhotoReaction, E_photon::Float32)
     species_masses = get_masses(reaction.product_types[1]; heavy_child_name= reaction.product_types[2], light_child_name = reaction.product_types[3], mode="PD")
 
     # 3. Calculate excess energy (J)
-    E_excess = calculate_excess_energy(reaction::PhotoReaction, species_masses[1], E_photon)
+    E_excess = calculate_excess_energy_dissociation(reaction::PhotoReaction, species_masses[1], E_photon)
 
     # 4. Calculate velocity of heavy and light photoreaction product
-    v_light_tuple, v_heavy_tuple = allocate_velocity(reaction, E_excess, species_masses, p_photon)
+    v_light_tuple, v_heavy_tuple = allocate_velocity_dissociation(reaction, E_excess, species_masses, p_photon)
 
     return v_light_tuple, v_heavy_tuple
 end
@@ -240,7 +158,7 @@ function multiple_photodissociation(reaction::PhotoReaction, energy_vector::Vect
 
     # 2. Show mean, STD and median speeds for photo products
     if reaction.display_info
-        show_info(reaction, final_speeds_heavy, final_speeds_light)
+        show_info_dissociation(reaction, final_speeds_heavy, final_speeds_light)
     end
 
     return final_speeds_light, final_speeds_heavy
@@ -263,7 +181,7 @@ end
 - Only if display_info is set true
 """
 
-function show_info(reaction::PhotoReaction, final_speeds_heavy, final_speeds_light)
+function show_info_dissociation(reaction::PhotoReaction, final_speeds_heavy, final_speeds_light)
     final_speeds_heavy_norms = [norm(p) for p in final_speeds_heavy]
     final_speeds_light_norms = [norm(p) for p in final_speeds_light]
 
@@ -276,5 +194,13 @@ function show_info(reaction::PhotoReaction, final_speeds_heavy, final_speeds_lig
     println("")
 end
 
-end
 
+# ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+# EXPORTS
+# ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+export calculate_excess_energy_dissociation
+export allocate_velocity_dissociation
+export simulate_photodissociation
+export multiple_photodissociation
+export show_info_dissociation
