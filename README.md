@@ -1,8 +1,24 @@
 # EXOSPHID
+
+<table>
+<tr>
+<td style="vertical-align: top; padding-right: 30px;">
+
 **EXOSpheric PHotoIonisation and PhotoDissociation**
 
 Julia-based scientific code library to simulate photodissociation and photoionisation processes in **extraterrestrial exospheres**, with particular focus on **lunar applications** and **hydrogen-bearing species**.  
+
 Developed by **Carlos Gómez de Olea Ballester** at **TU Munich, Professorship of Lunar and Planetary Exploration**, supervised by **Prof. Dr. Philipp Reiss** and advised by **Alexander Peschel** (PhD candidate).
+
+</td>
+<td style="vertical-align: top;">
+
+<img src="https://github.com/user-attachments/assets/b44495b0-c21e-4c1f-830a-51210dd5b003" alt="EXOSPHID Logo" width="1000"/>
+
+</td>
+</tr>
+</table>
+
 
 ---
 
