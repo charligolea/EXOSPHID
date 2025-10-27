@@ -28,6 +28,8 @@ photobenchmark(dt, solar_activity, parent_name)
 ### Example
 
 ```julia
+using EXOSPHID
+include(".../benchmark/benchmark.jl")
 # Benchmark H2O performance under quiet Sun conditions with 1e10 s time window
 photobenchmark(1e10, 0, "H2O")
 ```
@@ -42,6 +44,7 @@ Use Julia's [`Profile`]() package to track numerical allocations.
 
 ```julia
 using EXOSPHID
+include(".../benchmark/benchmark.jl")
 allocations(1e10, 0, "H2O")
 ```
 
