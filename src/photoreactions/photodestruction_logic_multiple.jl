@@ -33,14 +33,13 @@ function DPD_logic_multiple(energy_vector::Vector{Float32}, species_name::NTuple
     final_speeds_light_2, final_speeds_heavy = multiple_photodissociation(reaction, energy_vector)
 
     final_speeds_light_2_norms = [norm(p) for p in final_speeds_light_2]
-    final_speeds_light_1_norms = [norm(p) for p in final_speeds_light_1]
     final_speeds_heavy_norms = [norm(p) for p in final_speeds_heavy]
 
     data_speeds = DataFrame(
-    Product = ["O", "AVG H"],
-    Mean_Speed = [mean(final_speeds_heavy_norms), mean([mean(final_speeds_light_1_norms), mean(final_speeds_light_2_norms)])],
-    Median_Speed = [median(final_speeds_heavy_norms), mean([median(final_speeds_light_1_norms), median(final_speeds_light_2_norms)])],
-    STD_half = [std(final_speeds_heavy_norms)/2, maximum([std(final_speeds_light_1_norms)/2, std(final_speeds_light_2_norms)/2])]
+    Product = ["O", "H"],
+    Mean_Speed = [mean(final_speeds_heavy_norms), mean(final_speeds_light_2_norms)],
+    Median_Speed = [median(final_speeds_heavy_norms), median(final_speeds_light_2_norms)],
+    STD_half = [std(final_speeds_heavy_norms)/2, std(final_speeds_light_2_norms)/2]
     )
 
     println(data_speeds)
