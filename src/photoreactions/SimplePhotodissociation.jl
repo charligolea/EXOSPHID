@@ -24,8 +24,8 @@ function calculate_excess_energy_dissociation(reaction::PhotoReaction, m_parent:
         E_parent = 0.5f0 * m_parent * norm(reaction.v_parent)^2
         E_excess = (E_parent + E_photon - get_electronic_energy_predis(reaction.product_names[1]) - get_vibrorotational_energy(reaction.product_names[1]))
     elseif occursin("(DPD)", reaction.product_names[1])
-        E_parent = 0.5f0 * m_parent * norm(reaction.v_parent)^2 + get_vibrorotational_energy(reaction.product_names[1])
-        E_excess = (E_photon + E_parent) - reaction.E_bond 
+        E_parent = 0.5f0 * m_parent * norm(reaction.v_parent)^2
+        E_excess = (E_photon + E_parent) - reaction.E_bond
     else
         E_parent = 0.5f0 * m_parent * norm(reaction.v_parent)^2 + get_vibrorotational_energy(reaction.product_names[1])
         E_excess = (E_photon + E_parent) - reaction.E_bond - (get_vibrorotational_energy(reaction.product_names[2]) + get_vibrorotational_energy(reaction.product_names[3]))
