@@ -1,3 +1,5 @@
+println("TESTING of solar_database.jl ...............  ")
+
 @testset verbose=true "solar_database.jl" begin
 
     # Even if you select a smaller range check that sorted and same size
@@ -53,3 +55,6 @@
     end
 
 end
+
+println("............... COMPLETED TESTING of solar_database.jl\n")
+

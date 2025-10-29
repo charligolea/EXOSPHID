@@ -4,6 +4,7 @@ using LinearAlgebra
 const eV_to_J = 1.602f-19
 const m_fund = 1.66054e-27 # 1 M.U.
 
+println("TESTING SimplePhotodissociation.jl ............... ")
 
 @testset verbose=true "SimplePhotodissociation.jl" begin
     @testset verbose=true "random_unit_tuple()" begin
@@ -65,7 +66,7 @@ const m_fund = 1.66054e-27 # 1 M.U.
 
         vps = Dict("H2O" => 590.0, "OH" => 605.0, "H2" => 1750.0, "H" => 2500.0, "H(-)"=> 2500.0, "HO2" => 425.0, "H2O2" => 435.0, "He" => 1250.0, "Ne" => 560.0)
 
-        num_reactions = 1000
+        num_reactions = 10_000
         sa = 0
 
         for pt in exosphid_species
@@ -218,7 +219,7 @@ const m_fund = 1.66054e-27 # 1 M.U.
 
         vps = Dict("H2O" => 590.0, "OH" => 605.0, "H2" => 1750.0, "H" => 2500.0, "H(-)"=> 2500.0, "HO2" => 425.0, "H2O2" => 435.0, "He" => 1250.0, "Ne" => 560.0)
 
-        num_reactions = 1000
+        num_reactions = 10_000
         sa = 0
 
         for pt in exosphid_species
@@ -262,6 +263,8 @@ const m_fund = 1.66054e-27 # 1 M.U.
                                         
 
                                     elseif rt == "DPD"
+
+                                        vh = nothing # so that it's not lost after the loop is finished
 
                                         # First dissociation
                                         tsh = tshs[i][1] * eV_to_J
@@ -310,7 +313,7 @@ const m_fund = 1.66054e-27 # 1 M.U.
 
         vps = Dict("H2O" => 590.0, "OH" => 605.0, "H2" => 1750.0, "H" => 2500.0, "H(-)"=> 2500.0, "HO2" => 425.0, "H2O2" => 435.0, "He" => 1250.0, "Ne" => 560.0)
 
-        num_reactions = 1000
+        num_reactions = 10_000
         sa = 0
 
         for pt in exosphid_species
@@ -395,3 +398,5 @@ const m_fund = 1.66054e-27 # 1 M.U.
 
     
 end
+
+println("............... COMPLETED TESTING of SimplePhotodissociation.jl\n")

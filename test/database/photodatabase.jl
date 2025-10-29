@@ -1,5 +1,7 @@
 const m_fund = 1.66054e-27 # 1 M.U.
 
+println("TESTING photodatabase.jl ...............")
+
 @testset verbose=true "Photodatabase Tables Validation" begin
 
     # 0. Test that database exists
@@ -276,3 +278,5 @@ end
         end
     end
 end
+
+println("............... COMPLETED TESTING photodatabase.jl\n")

@@ -3,6 +3,9 @@ using LinearAlgebra
 
 const eV_to_J = 1.602f-19
 
+
+println("TESTING SimplePhotoionisation.jl ............... ")
+
 @testset verbose=true "SimplePhotoionisation.jl" begin
 
     @testset verbose=true "random_unit_tuple()" begin
@@ -36,7 +39,7 @@ const eV_to_J = 1.602f-19
 
         vps = Dict("H2O" => 590.0, "OH" => 605.0, "H2" => 1750.0, "H" => 2500.0, "H(-)"=> 2500.0, "HO2" => 425.0, "H2O2" => 435.0, "He" => 1250.0, "Ne" => 560.0)
 
-        num_reactions = 1000
+        num_reactions = 10_000
         sa = 0
 
         for pt in exosphid_species
@@ -161,7 +164,7 @@ const eV_to_J = 1.602f-19
 
         vps = Dict("H2O" => 590.0, "OH" => 605.0, "H2" => 1750.0, "H" => 2500.0, "H(-)"=> 2500.0, "HO2" => 425.0, "H2O2" => 435.0, "He" => 1250.0, "Ne" => 560.0)
 
-        num_reactions = 1000
+        num_reactions = 10_000
         sa = 0
 
         for pt in exosphid_species
@@ -248,7 +251,7 @@ const eV_to_J = 1.602f-19
 
         vps = Dict("H2O" => 590.0, "OH" => 605.0, "H2" => 1750.0, "H" => 2500.0, "H(-)"=> 2500.0, "HO2" => 425.0, "H2O2" => 435.0, "He" => 1250.0, "Ne" => 560.0)
 
-        num_reactions = 1000
+        num_reactions = 10_000
         sa = 0
 
         for pt in exosphid_species
@@ -329,3 +332,5 @@ const eV_to_J = 1.602f-19
 
 
 end
+
+println("............... COMPLETED TESTING of SimplePhotoionisation.jl\n")
