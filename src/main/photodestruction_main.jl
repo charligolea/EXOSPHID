@@ -1,5 +1,5 @@
 """ 
-#:: FUNCTION: photodestruction(solar_activity, dt, parent_type, parent_velocity, sun_tuple)
+#:: FUNCTION: photodestruction(solar_activity, dt, parent_type, parent_velocity, sun_tuple, dist_to_sun)
 #-------------------------------------------------------------------------------------------
 # Arguments
 - solar_activity = From 0 (Quiet Sun) to 1 (Active Sun)
@@ -12,6 +12,7 @@
 - reaction_name:: Identifier for the reaction (e.g. H2O-PD1 is the first PhotoDissociation mechanism for H2O )
 - product_types:: ["T1", "T2", "T3"]
 - product_velocities:: [(vx1, vy1, vz1), (vx2, vy2, vz2), (vx3, vy3, vz3)]
+- dist_to_sun: in A.U. (default set at 1.0 for Earth-moon system and NEOs)
 """
 
 """
@@ -24,13 +25,13 @@ function random_unit_tuple()
     return (Float32(sin(φ) * cos(θ)), Float32(sin(φ) * sin(θ)), Float32(cos(φ)))
 end
 
-function photodestruction(solar_activity::Float32, dt::Float32, parent_type::String, parent_velocity::Tuple{Float32, Float32, Float32}, sun_tuple::Tuple{Float32, Float32, Float32})
+function photodestruction(solar_activity::Float32, dt::Float32, parent_type::String, parent_velocity::Tuple{Float32, Float32, Float32}, sun_tuple::Tuple{Float32, Float32, Float32}, dist_to_sun::Float32=1.0f0)
 
     # 1. Get photochemical information for parent species
     photochemical_info = get_species_photochemical_info(parent_type)
 
     # 2. Check if reaction is happening according to probability
-    k = get_photodestruction_rates(photochemical_info, solar_activity) # Photodestruction rate
+    k = get_photodestruction_rates(photochemical_info, solar_activity, dist_to_sun) # Photodestruction rate
     reaction_occurence = is_photoreaction_occuring(k, dt)
 
     if reaction_occurence == true
@@ -65,77 +66,77 @@ end
 # ─────────────────────────────────────────────
 # 2. SCALAR VELOCITY + TUPLE SUN
 # ─────────────────────────────────────────────
-function photodestruction(solar_activity::Real, dt::Real, parent_type::String, parent_velocity::Real, sun_tuple::Tuple)
+function photodestruction(solar_activity::Real, dt::Real, parent_type::String, parent_velocity::Real, sun_tuple::Tuple, dist_to_sun::Real=1.0)
     @assert 0.0 <= parent_velocity "Parent velocity must be positive!"
     @assert len(sun_tuple) == 3 "Give solar vector as a 3D object! (preferably tuple)"
     pv = Float32(parent_velocity) .* random_unit_tuple()
     st = Tuple(Float32.(sun_tuple))
-    return photodestruction(Float32(solar_activity), Float32(dt), parent_type, pv, st)
+    return photodestruction(Float32(solar_activity), Float32(dt), parent_type, pv, st, Float32(dist_to_sun))
 end
 
 # ─────────────────────────────────────────────
 # 3. SCALAR VELOCITY + NO SUN VECTOR
 # ─────────────────────────────────────────────
-function photodestruction(solar_activity::Real, dt::Real, parent_type::String, parent_velocity::Real, sun_tuple::Nothing)
+function photodestruction(solar_activity::Real, dt::Real, parent_type::String, parent_velocity::Real, sun_tuple::Nothing, dist_to_sun::Real=1.0)
     @assert 0.0 <= parent_velocity "Parent velocity must be positive!"
     pv = Float32(parent_velocity) .* random_unit_tuple()
     st = random_unit_tuple()
-    return photodestruction(Float32(solar_activity), Float32(dt), parent_type, pv, st)
+    return photodestruction(Float32(solar_activity), Float32(dt), parent_type, pv, st, Float32(dist_to_sun))
 end
 
 # ─────────────────────────────────────────────
 # 4. TUPLE VELOCITY + NO SUN VECTOR
 # ─────────────────────────────────────────────
-function photodestruction(solar_activity::Real, dt::Real, parent_type::String, parent_velocity::Tuple, sun_tuple::Nothing)
+function photodestruction(solar_activity::Real, dt::Real, parent_type::String, parent_velocity::Tuple, sun_tuple::Nothing, dist_to_sun::Real=1.0)
     @assert len(parent_velocity) == 3 "Give parent_velocity as a 3D object or a scalar"
     pv = Tuple(Float32.(parent_velocity))
     st = random_unit_tuple()
-    return photodestruction(Float32(solar_activity), Float32(dt), parent_type, pv, st)
+    return photodestruction(Float32(solar_activity), Float32(dt), parent_type, pv, st, Float32(dist_to_sun))
 end
 
 # ─────────────────────────────────────────────
 # 5. TUPLE VELOCITY + TUPLE SUN VECTOR
 # ─────────────────────────────────────────────
-function photodestruction(solar_activity::Real, dt::Real, parent_type::String, parent_velocity::Tuple, sun_tuple::Tuple)
+function photodestruction(solar_activity::Real, dt::Real, parent_type::String, parent_velocity::Tuple, sun_tuple::Tuple, dist_to_sun::Real=1.0)
     @assert len(parent_velocity) == 3 "Give parent_velocity as a 3D object or a scalar"
     @assert len(sun_tuple) == 3 "Give solar vector as a 3D object! (preferably tuple)"
     pv = Tuple(Float32.(parent_velocity))
     st = Tuple(Float32.(sun_tuple))
-    return photodestruction(Float32(solar_activity), Float32(dt), parent_type, pv, st)
+    return photodestruction(Float32(solar_activity), Float32(dt), parent_type, pv, st, Float32(dist_to_sun))
 end
 
 # ─────────────────────────────────────────────
 # 6. REAL VELOCITY, VECTOR SUN TUPLE
 # ─────────────────────────────────────────────
-function photodestruction(solar_activity::Real, dt::Real, parent_type::String, parent_velocity::Real, sun_tuple::AbstractVector{<:Real})
+function photodestruction(solar_activity::Real, dt::Real, parent_type::String, parent_velocity::Real, sun_tuple::AbstractVector{<:Real}, dist_to_sun::Real=1.0)
     @assert 0.0 <= parent_velocity "Parent velocity must be positive!"
     @assert len(sun_tuple) == 3 "Solar vector must be 3D object!"
     pv = Float32(parent_velocity) .* random_unit_tuple()
     st = Tuple(Float32.(sun_tuple))
-    return photodestruction(Float32(solar_activity), Float32(dt), parent_type, pv, st)
+    return photodestruction(Float32(solar_activity), Float32(dt), parent_type, pv, st, Float32(dist_to_sun))
 end
 
 
 # ─────────────────────────────────────────────
 # 7. VECTOR VELOCITY + VECTOR SUN
 # ─────────────────────────────────────────────
-function photodestruction(solar_activity::Real, dt::Real, parent_type::String, parent_velocity::AbstractVector{<:Real}, sun_tuple::AbstractVector{<:Real})
+function photodestruction(solar_activity::Real, dt::Real, parent_type::String, parent_velocity::AbstractVector{<:Real}, sun_tuple::AbstractVector{<:Real}, dist_to_sun::Real=1.0)
     @assert length(parent_velocity) == 3 "parent_velocity must have length 3"
     @assert length(sun_tuple) == 3 "sun_tuple must have length 3"
     pv = Tuple(Float32.(parent_velocity))
     st = Tuple(Float32.(sun_tuple))
-    return photodestruction(Float32(solar_activity), Float32(dt), parent_type, pv, st)
+    return photodestruction(Float32(solar_activity), Float32(dt), parent_type, pv, st, Float32(dist_to_sun))
 end
 
 
 # ─────────────────────────────────────────────
 # 8. VECTOR VELOCITY + NO SUN VECTOR
 # ─────────────────────────────────────────────
-function photodestruction(solar_activity::Real, dt::Real, parent_type::String, parent_velocity::AbstractVector{<:Real}, sun_tuple::Nothing)
+function photodestruction(solar_activity::Real, dt::Real, parent_type::String, parent_velocity::AbstractVector{<:Real}, sun_tuple::Nothing, dist_to_sun::Real=1.0)
     @assert length(parent_velocity) == 3 "parent_velocity must have length 3"
     pv = Tuple(Float32.(parent_velocity))
     st = random_unit_tuple()
-    return photodestruction(Float32(solar_activity), Float32(dt), parent_type, pv, st)
+    return photodestruction(Float32(solar_activity), Float32(dt), parent_type, pv, st, Float32(dist_to_sun))
 end
 
 export photodestruction

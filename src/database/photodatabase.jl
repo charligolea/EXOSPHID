@@ -24,7 +24,7 @@ end
 # ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 
 """
-#:: FUNCTION: get_photodestruction_rates(species, solar_activity)
+#:: FUNCTION: get_photodestruction_rates(species, solar_activity, dist_to_sun)
 #-------------------------------------------------------------------------------------------
 # OBJECTIVE:
 - Return the photodestruction rate `k` [1/s] for a given `species` and `solar_activity` level (0 = quiet, 1 = active).
@@ -32,21 +32,30 @@ end
 # INPUTS:
 - species: name of parent species
 - solar_activity: scalar from 0 (Quiet Sun) to 1 (Active Sun)
+- dist_to_sun: distance to Sun in A.U. (default for Moon = 1)
 """
 
-function get_photodestruction_rates(ph_info::Species, solar_activity::Float32)
+function get_photodestruction_rates(ph_info::Species, solar_activity::Float32, dist_to_sun::Float32)
     """
     Return the photodestruction rate `k` [1/s] 
-    for a given `species` and `solar_activity` level (0 = quiet, 1 = active).
+    for a given `species`, `solar_activity` level (0 = quiet, 1 = active) and distance to the Sun (in A.U.)
     """
 
     @assert 0.0 <= solar_activity <= 1.0 "Solar activity must be in (0,1)!"
+    @assert 0.0 <= dist_to_sun <= 100.0 "Distance to Sun must be positive and within known Solar System bounds (approx 100 A.U.)!"
+    
     k = (1 - solar_activity) * ph_info.quiet_rate + solar_activity * ph_info.active_rate
 
-    return k
+    if isapprox(dist_to_sun, 1.0)
+        # At 1 AU, no scaling needed
+        return k
+    else
+        return k/(dist_to_sun^2)
+    end
+
 end
 
-get_photodestruction_rates(ph_info::Species, solar_activity::Real) = get_photodestruction_rates(ph_info, Float32(solar_activity))
+get_photodestruction_rates(ph_info::Species, solar_activity::Real, dist_to_sun::Real) = get_photodestruction_rates(ph_info, Float32(solar_activity), Float32(dist_to_sun))
 
 
 """
@@ -232,8 +241,10 @@ function get_vibrorotational_energy(species::String)
         energy = 0.35f0 * conversion_factor
     elseif species == "OH(X2π)" || species == "OH"
         energy = 0.22f0 * conversion_factor
-    elseif species == "OH(A2Σ+)" || species == "OH(DPD)"
+    elseif species == "OH(A2Σ+)"
         energy = 0.25f0 * conversion_factor
+    elseif species == "OH(DPD)"
+        energy = 0.00f0 * conversion_factor
     elseif species == "OH(1Σ+)" || species == "OH(12Δ/22Π)"
         energy = 0.25f0 * conversion_factor
     elseif species == "OH(A2Σ+, v'=3)"
