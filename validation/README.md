@@ -36,6 +36,15 @@ This will simulate the exothermic velocities for `"H2O"` molecules under quiet S
 
 ---
 
+### Validation flow
+
+The standard **EXOSPHID** execution relies on the `photodestruction` function. This function first determines the **current reaction** that is occurring and then calls the [`photodestruction_logic.jl`](https://github.com/charligolea/EXOSPHID/tree/main/src/photoreactions/photodestruction_logic.jl) script **once**. Thus, each execution of `photodestruction` simulates a **single photon interaction**.
+
+For the **validation script**, the procedure is slightly different. For a given number of reactions n (typically large, e.g., 100,000 to 1,000,000), we simulate n imaginary photons with energies sampled from the **normalized spectra**. For all of these photons, we iterate through all **possible photoreactions** for the given parent species and call the [`photodestruction_logic_multiple.jl`](https://github.com/charligolea/EXOSPHID/tree/main/src/photoreactions/photodestruction_logic_multiple.jl) script.  
+
+This script recursively simulates each photoreaction **n times**. At the end, it prints **statistics for every specific reaction**, showing the outcomes after simulating it n times. 
+
+
 ### Notes
 
 - Validation is performed by comparing **EXOSPHID estimated velocities** with **literature values**.  
