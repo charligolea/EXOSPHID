@@ -35,7 +35,7 @@ println("TESTING SimplePhotodissociation.jl ............... ")
     end
 
 
-    @testset verbose=true "calculate_excess_energy_dissociation_dissociation()" begin
+    @testset verbose=true "calculate_excess_energy_dissociation()" begin
         mp = 17 * m_fund
         Ep = 5.0f0 * eV_to_J
         Eb = 4.0f0 * eV_to_J
