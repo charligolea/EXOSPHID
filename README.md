@@ -45,6 +45,17 @@ Further work will appear in **upcoming publications (2026)**.
 
 ---
 
+## 📚 Documentation
+Extensive documentation is available in the [`EXOSPHID WIKI`](https://github.com/charligolea/EXOSPHID/wiki). This includes information regarding:
+- Structure and Logic
+- General Photochemistry Theory
+- Photochemical Database
+- Performance & Benchmark
+- Validation
+- Testing
+
+---
+
 ## 📂 Repository Structure
 ```
 ├── benchmark/                 
