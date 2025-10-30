@@ -46,11 +46,15 @@ function photodestruction(solar_activity::Float32, dt::Float32, parent_type::Str
             # 5. Determine current reaction for given photon
             current_reaction = get_current_reaction(photon_wvl, photochemical_info)
 
-            if  current_reaction.present_reaction !== nothing
-                # 6. Simulate photodestruction process
-                product_velocities, product_types = call_photodestruction_logic(current_reaction, photochemical_info, parent_velocity, sun_tuple, photon_energy)
-                return reaction_occurence, current_reaction.reaction_name, product_types, product_velocities, current_reaction.wvl_range
-            else 
+            if current_reaction isa CurrentReaction
+                if  current_reaction.present_reaction !== nothing
+                    # 6. Simulate photodestruction process
+                    product_velocities, product_types = call_photodestruction_logic(current_reaction, photochemical_info, parent_velocity, sun_tuple, photon_energy)
+                    return reaction_occurence, current_reaction.reaction_name, product_types, product_velocities, current_reaction.wvl_range
+                else 
+                    return false, "", [], [], ()
+                end
+            else
                 return false, "", [], [], ()
             end
         else
