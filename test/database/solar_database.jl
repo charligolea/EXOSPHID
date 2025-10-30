@@ -2,7 +2,6 @@ println("TESTING of solar_database.jl ...............  ")
 
 @testset verbose=true "solar_database.jl" begin
 
-    # Even if you select a smaller range check that sorted and same size
 
     @testset verbose=true "Wavelength array correctly sorted" begin
         @test issorted(solar_wavelength)
