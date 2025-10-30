@@ -135,6 +135,31 @@ function generate_energy_vector(wavelengths::AbstractVector{<:Real}, normalized_
 end
 
 
+"""
+#:: FUNCTION: get_solar_fluxes(parent_type, wavelength_range)
+-------------------------------------------------------------------------------------------
+
+OBJECTIVE: Get normalized fluxes for a given parent species and ina specific wavelength range
+
+INPUTS: 
+- wavelength_range::  2D Tuple
+- parent_type:: within exosphid_species
+
+OUTPUTS:
+- wvl_vector, e_vector
+
+AUXILIARY FUNCTION: assert_not_same_interval(wrange, solar_wavelength)
+    -> Checks that upper and lower wavlength bounds are not exactly between 2 consecutive wavleength bins, otherwise the generated arrays would be of size 0.
+"""
+
+function assert_not_same_interval(wrange::Tuple{<:Real,<:Real}, solar_wavelength::Tuple)
+    solar_vec = collect(solar_wavelength)
+    idxs = map(w -> searchsortedfirst(solar_vec, w), wrange)
+
+    @assert !(all(i -> 1 < i <= length(solar_vec), idxs) && idxs[1] == idxs[2] && (solar_vec[idxs[1]] != wrange[1] && solar_vec[idxs[2]] != wrange[2]))
+        "Upper and lower wavelength range $wrange lie within 2 consecutive solar_wavelength bins"
+end
+
 function get_solar_fluxes(parent_type::String, wvl_range::NTuple{2, Float64})
 
     @assert wvl_range[2] > wvl_range[1] "Wavelength bounds incorrect"
@@ -143,6 +168,7 @@ function get_solar_fluxes(parent_type::String, wvl_range::NTuple{2, Float64})
         wavelengths = solar_wavelength
         flux_quiet, flux_active = get_normalized_fluxes(parent_type)
     else
+        assert_not_same_interval(wvl_range, solar_wavelength)
         flux_quiet_standard, flux_active_standard = get_standard_fluxes(parent_type)
         wavelengths, flux_quiet = normalize_flux_distribution(solar_wavelength, flux_quiet_standard, wvl_range)
         wavelengths, flux_active = normalize_flux_distribution(solar_wavelength, flux_active_standard, wvl_range)
@@ -152,7 +178,7 @@ function get_solar_fluxes(parent_type::String, wvl_range::NTuple{2, Float64})
 end
 
 function get_solar_fluxes(parent_type::String, wvl_range::Tuple{<:Real,<:Real})
-    return get_solar_fluxes(parent_type, Float32.(Tuple(wvl_range)))
+    return get_solar_fluxes(parent_type, Float64.(Tuple(wvl_range)))
 end
 
 
@@ -197,3 +223,4 @@ end
 
 export flux_outputs
 export normalize_flux_distribution
+export get_solar_fluxes
