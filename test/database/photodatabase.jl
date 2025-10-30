@@ -111,7 +111,7 @@ println("TESTING photodatabase.jl ...............")
             @testset verbose=true "Postive Photodestruction rates" begin
                 @test photo_info.quiet_rate > 0
                 @test photo_info.quiet_rate > 0
-                @test get_photodestruction_rates(photo_info, rand(Float32)) > 0
+                @test get_photodestruction_rates(photo_info, rand(Float32), 1.0) > 0
             end
 
             @testset verbose=true "Photorates consistent with fluxes" begin
