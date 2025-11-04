@@ -15,22 +15,22 @@ using DataFrames
 # LOAD SOURCES
 # ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 
-include(joinpath(@__DIR__, "main/photodestruction_main.jl"))
-include(joinpath(@__DIR__, "database/species/general_construct.jl"))
-include(joinpath(@__DIR__, "database/photodatabase.jl"))
-include(joinpath(@__DIR__, "database/solar_database.jl"))
-include(joinpath(@__DIR__, "database/solar_spectrum.jl"))
+include(joinpath(@__DIR__, "main", "photodestruction_main.jl"))
+include(joinpath(@__DIR__, "database", "species", "general_construct.jl"))
+include(joinpath(@__DIR__, "database", "photodatabase.jl"))
+include(joinpath(@__DIR__, "database", "solar_database.jl"))
+include(joinpath(@__DIR__, "database", "solar_spectrum.jl"))
 
 for parent in exosphid_species
-    include(joinpath(@__DIR__, "database/species/$parent.jl"))
+    include(joinpath(@__DIR__, "database", "species", "$parent.jl"))
 end
 
-include(joinpath(@__DIR__, "photoreactions/photoreactions.jl"))
-include(joinpath(@__DIR__, "photoreactions/SimplePhotodissociation.jl"))
-include(joinpath(@__DIR__, "photoreactions/SimplePhotoionisation.jl"))
-include(joinpath(@__DIR__, "photoreactions/photodestruction_logic.jl"))
-include(joinpath(@__DIR__, "photoreactions/photodestruction_logic_multiple.jl"))
-include(joinpath(@__DIR__, "../validation/validation.jl"))
+include(joinpath(@__DIR__, "photoreactions", "photoreactions.jl"))
+include(joinpath(@__DIR__, "photoreactions", "SimplePhotodissociation.jl"))
+include(joinpath(@__DIR__, "photoreactions", "SimplePhotoionisation.jl"))
+include(joinpath(@__DIR__, "photoreactions", "photodestruction_logic.jl"))
+include(joinpath(@__DIR__, "photoreactions", "photodestruction_logic_multiple.jl"))
+include(joinpath(@__DIR__, "..", "validation", "validation.jl"))
 
 
 """
@@ -38,11 +38,11 @@ include(joinpath(@__DIR__, "../validation/validation.jl"))
 
 ## EXOSpheric PhotoIonisation & PhotoDissociation
 
-Scientific code library for simulating photoehcmical loss pathways in exosphere environments of airless
+Scientific code library for simulating photochemical loss pathways in exosphere environments of airless
 bodies in the solar system. Note that the package is under development and subject to
 frequent changes. For questions, please contact the C. Gómez de Olea B. via email.
 
-The documentation and manual can be found in the [GitHub wiki](https://github.com/Smolkaa/ExESS.jl/wiki).
+The documentation and manual can be found in the [GitHub wiki](https://github.com/charligolea/EXOSPHID/wiki).
 
 _Author: C. Gómez de Olea Ballester (carloas.olea@tum.de)_
 
@@ -54,7 +54,7 @@ package-manager `Pkg`:
 ```julia
 using Pkg
 Pkg.add("https://github.com/charligolea/EXOSPHID.jl.git")
-using ExESS
+using EXOSPHID
 ```
 If you want to use the latest development version, you can install the package as:
 ```julia
