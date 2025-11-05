@@ -116,7 +116,7 @@ Extensive documentation is available in the [`EXOSPHID WIKI`](https://github.com
 ## ⚙️ Installation & Usage
 
 Please refer to the [official guide](https://julialang.org/downloads/) to installing **Julia** on your machine.  
-The **ExESS.jl** package can be installed using Julia’s package manager **Pkg**:
+The **EXOSPHID.jl** package can be installed using Julia’s package manager **Pkg**:
 
 ```julia
 using Pkg
@@ -145,7 +145,7 @@ photodestruction(0, 1e10, "H2O", 550, nothing)
 ```
 
 - **Inputs**:
-  - `solar_activity` : Ratio of solar activity from 0.0 to 1.0, where 0.0 corresponds to Quiet Sun conditions, and 1.0 is for the Active Sun
+  - `solar_activity` : Ratio of solar activity from 0.0 to 1.0, where 0.0 corresponds to Quiet Sun (QS) conditions, and 1.0 is for the Active Sun (AS)
   - `dt` : Simulation time window [s]
   - `parent_type` : `"H2O"`, `"OH"`, `"H2"`, `"H"`, `"H(-)"`, `"HO2"`, `"H2O2"`, `"He"`, `"Ne"`
   - `parent_velocity`: Parent velocity [m/s]
@@ -194,7 +194,7 @@ The model accounts for a range of fundamental processes relevant in exospheric e
 
 ## ⚠️ Notes
 - Currently calibrated for 9 species.  
-- Rates and pathways extendable via [`src/database/species`](../src/database/species/).  
+- Rates and pathways extendable via [`src/database/species`](src/database/species/).  
 - Parameters and branching ratios subject to update in future publications.
 
 ---
