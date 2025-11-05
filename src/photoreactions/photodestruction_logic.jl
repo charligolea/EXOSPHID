@@ -3,14 +3,14 @@
 # ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 
 """
-    SPD_logic(photon_energy, species_name, tsh_energy, parent_velocity, sun_tuple): 
+    SPD_logic(photon_energy, snames, tsh_energy, parent_velocity, sun_tuple): 
 
 # OBJECTIVE:
 - Handles Simple PhotoDissociation (SPD) logic
 
 # INPUTS:
 - `photon_energy::Float32` -> Photon Energy in J
-- `species_name::NTuple{3, String}` -> 3D Tuple containing names of parent, and daughter (x2) species, POTENTIALLY INCLUDING ELECTRONIC STATES IN PARENTHESIS
+- `snames::NTuple{3, String}` -> 3D Tuple containing names of parent, and daughter (x2) species, POTENTIALLY INCLUDING ELECTRONIC STATES IN PARENTHESIS
 - `tsh_energy::Float32` -> Bond/Dissociation Energy for parent species, in J
 - `parent_velocity::NTuple{3, Float32}` -> 3D velocity Tuple
 - `sun_tuple::NTuple{3, Float32})` -> 3D Solar Tuple, or direction of incoming photon
@@ -20,9 +20,9 @@
 - `product_types` -> 2-element vector containing String objects -> Name of the 2 daughter species. 
     Only considers "plain" atomic/molecular species, meaning no information about electronic states is given.
 """
-function SPD_logic(photon_energy::Float32, species_name::NTuple{3, String}, tsh_energy::Float32, parent_velocity::NTuple{3, Float32}, sun_tuple::NTuple{3, Float32})
-    product_names = map(s -> replace(s, r"\((?!\+).*?\)" => ""), species_name)
-    reaction = PhotoReaction(energy_to_J(tsh_energy), parent_velocity, sun_tuple, species_name, false)
+function SPD_logic(photon_energy::Float32, snames::NTuple{3, String}, tsh_energy::Float32, parent_velocity::NTuple{3, Float32}, sun_tuple::NTuple{3, Float32})
+    product_names = map(s -> replace(s, r"\((?!\+).*?\)" => ""), snames)
+    reaction = PhotoReaction(energy_to_J(tsh_energy), parent_velocity, sun_tuple, snames, false)
     final_speeds_light, final_speeds_heavy = simulate_photodissociation(reaction, photon_energy)
     
     product_types = [product_names[2], product_names[3]]
@@ -31,19 +31,19 @@ function SPD_logic(photon_energy::Float32, species_name::NTuple{3, String}, tsh_
     return product_velocities, product_types
 end
 
-function SPD_logic(photon_energy::Real, species_name::NTuple{3, String}, tsh_energy::Float32, parent_velocity::NTuple{3, Float32}, sun_tuple::NTuple{3, Float32})
-    return SPD_logic(Float32(photon_energy), species_name, tsh_energy, parent_velocity, sun_tuple)
+function SPD_logic(photon_energy::Real, snames::NTuple{3, String}, tsh_energy::Float32, parent_velocity::NTuple{3, Float32}, sun_tuple::NTuple{3, Float32})
+    return SPD_logic(Float32(photon_energy), snames, tsh_energy, parent_velocity, sun_tuple)
 end
 
 """
-    DPD_logic(photon_energy, species_name, tsh_energy, parent_velocity, sun_tuple): 
+    DPD_logic(photon_energy, snames, tsh_energy, parent_velocity, sun_tuple): 
 
 # OBJECTIVE:
 - Handles Double PhotoDissociation (DPD) logic
 
 # INPUTS:
 - `photon_energy::Float32` -> Photon Energy in J
-- `species_name::NTuple{2, NTuple{3, String}}` -> Tuple congtaining 2 elements. 
+- `snames::NTuple{2, NTuple{3, String}}` -> Tuple congtaining 2 elements. 
     * Each of these elements is a 3D Tuple containing names of parent, and daughter (x2) species
     * The first Tuple will corrspond to the first dissociation, the other to the second consequent dissociation
     * POTENTIALLY INCLUDING ELECTRONIC STATES IN PARENTHESIS
@@ -58,14 +58,14 @@ end
     * The first species will be the heavy product, the other 2 the lighter ones.
     * Currently, this reaction is only supported for the DPD of Water: H2O -> OH + H -> O + H + H
 """
-function DPD_logic(photon_energy::Float32, species_name::NTuple{2, NTuple{3, String}}, tsh_energy::NTuple{2, Float32}, parent_velocity::NTuple{3, Float32}, sun_tuple::NTuple{3, Float32})
+function DPD_logic(photon_energy::Float32, snames::NTuple{2, NTuple{3, String}}, tsh_energy::NTuple{2, Float32}, parent_velocity::NTuple{3, Float32}, sun_tuple::NTuple{3, Float32})
     
-    product_names = (map(s -> replace(s, r"\((?!\+).*?\)" => ""), species_name[1]), map(s -> replace(s, r"\((?!\+).*?\)" => ""), species_name[2]))
+    product_names = (map(s -> replace(s, r"\((?!\+).*?\)" => ""), snames[1]), map(s -> replace(s, r"\((?!\+).*?\)" => ""), snames[2]))
 
-    reaction = PhotoReaction(energy_to_J(tsh_energy[1]), parent_velocity, sun_tuple, species_name[1], false)
+    reaction = PhotoReaction(energy_to_J(tsh_energy[1]), parent_velocity, sun_tuple, snames[1], false)
     final_speeds_light_1, final_speeds_heavy_old = simulate_photodissociation(reaction, photon_energy)
 
-    reaction = PhotoReaction(energy_to_J(tsh_energy[2]), map(Float32, final_speeds_heavy_old), sun_tuple, species_name[2], false)
+    reaction = PhotoReaction(energy_to_J(tsh_energy[2]), map(Float32, final_speeds_heavy_old), sun_tuple, snames[2], false)
     final_speeds_light_2, final_speeds_heavy = simulate_photodissociation(reaction, photon_energy)
     
     product_types = [product_names[2][2], product_names[1][3], product_names[2][3]]
@@ -74,20 +74,20 @@ function DPD_logic(photon_energy::Float32, species_name::NTuple{2, NTuple{3, Str
     return product_velocities, product_types
 end
 
-function DPD_logic(photon_energy::Real, species_name::NTuple{3, String}, tsh_energy::Float32, parent_velocity::NTuple{3, Float32}, sun_tuple::NTuple{3, Float32})
-    return DPD_logic(Float32(photon_energy), species_name, tsh_energy, parent_velocity, sun_tuple)
+function DPD_logic(photon_energy::Real, snames::NTuple{3, String}, tsh_energy::Float32, parent_velocity::NTuple{3, Float32}, sun_tuple::NTuple{3, Float32})
+    return DPD_logic(Float32(photon_energy), snames, tsh_energy, parent_velocity, sun_tuple)
 end
 
 
 """
-    SPI_logic(photon_energy, species_name, tsh_energy, parent_velocity, sun_tuple): 
+    SPI_logic(photon_energy, snames, tsh_energy, parent_velocity, sun_tuple): 
 
 # OBJECTIVE:
 - Handles Simple PhotoIonisation (SPI) logic
 
 # INPUTS:
 - `photon_energy::Float32` -> Photon Energy in J
-- `species_name::NTuple{3, String}` -> 3D Tuple containing names of parent (e.g H2O), ionised product (e.g. H2O(+)) and electron (e.g. e(-))
+- `snames::NTuple{3, String}` -> 3D Tuple containing names of parent (e.g H2O), ionised product (e.g. H2O(+)) and electron (e.g. e(-))
     * electronic states should not be included in this case
 - `tsh_energy::Float32` -> Ionisation Energy in J
 - `parent_velocity::NTuple{3, Float32}` -> 3D velocity Tuple
@@ -97,28 +97,28 @@ end
 - `product_velocities` -> 1-element vector, containing NTuple{3, Float64} -> The 3D Tuple contains the velocity vector for the ionised parent species
 - `product_types` -> 1-element vector containing String object -> Name of the ionised parent
 """
-function SPI_logic(photon_energy::Float32, species_name::NTuple{3, String}, tsh_energy::Float32, parent_velocity::NTuple{3, Float32}, sun_tuple::NTuple{3, Float32})
-    reaction = PhotoReaction(energy_to_J(tsh_energy), parent_velocity, sun_tuple, species_name, false)
+function SPI_logic(photon_energy::Float32, snames::NTuple{3, String}, tsh_energy::Float32, parent_velocity::NTuple{3, Float32}, sun_tuple::NTuple{3, Float32})
+    reaction = PhotoReaction(energy_to_J(tsh_energy), parent_velocity, sun_tuple, snames, false)
     product_velocities = [simulate_photoionisation(reaction, photon_energy)]
-    product_types = [species_name[2]]
+    product_types = [snames[2]]
 
     return product_velocities, product_types
 end
 
-function SPI_logic(photon_energy::Real, species_name::NTuple{3, String}, tsh_energy::Float32, parent_velocity::NTuple{3, Float32}, sun_tuple::NTuple{3, Float32})
-    return SPI_logic(Float32(photon_energy), species_name, tsh_energy, parent_velocity, sun_tuple)
+function SPI_logic(photon_energy::Real, snames::NTuple{3, String}, tsh_energy::Float32, parent_velocity::NTuple{3, Float32}, sun_tuple::NTuple{3, Float32})
+    return SPI_logic(Float32(photon_energy), snames, tsh_energy, parent_velocity, sun_tuple)
 end
 
 
 """
-    DPI_logic(photon_energy, species_name, tsh_energy, parent_velocity, sun_tuple): 
+    DPI_logic(photon_energy, snames, tsh_energy, parent_velocity, sun_tuple): 
 
 # OBJECTIVE:
 - Handles Double PhotoIonisation (DPI) logic
 
 # INPUTS:
 - `photon_energy::Float32` -> Photon Energy in J
-- `species_name::NTuple{3, String}` -> Tuple containing 2 Tuple elements.
+- `snames::NTuple{3, String}` -> Tuple containing 2 Tuple elements.
     * Both of these elements are 3D Tuples containing names of parent (e.g H2O), ionised product (e.g. H2O(+)) and electron (e.g. e(-))
     * Two tuples, for 2 ionisation reactions
     * electronic states should not be included in parenthesis in this case
@@ -130,24 +130,24 @@ end
 - `product_velocities` -> 1-element vector, containing NTuple{3, Float64} -> The 3D Tuple contains the velocity vector for the final ionised product
 - `product_types` -> 1-element vector containing String object -> Name of the final ionised species
 """
-function DPI_logic(photon_energy::Float32, species_name::NTuple{2, NTuple{3, String}}, tsh_energy::NTuple{2, Float32}, parent_velocity::NTuple{3, Float32}, sun_tuple::NTuple{3, Float32})
-    reaction = PhotoReaction(energy_to_J(tsh_energy[1]), parent_velocity, sun_tuple, species_name[1], false)
+function DPI_logic(photon_energy::Float32, snames::NTuple{2, NTuple{3, String}}, tsh_energy::NTuple{2, Float32}, parent_velocity::NTuple{3, Float32}, sun_tuple::NTuple{3, Float32})
+    reaction = PhotoReaction(energy_to_J(tsh_energy[1]), parent_velocity, sun_tuple, snames[1], false)
     final_speeds_ion = simulate_photoionisation(reaction, photon_energy)
 
-    reaction = PhotoReaction(energy_to_J(tsh_energy[2]), map(Float32, final_speeds_ion), sun_tuple, species_name[2], false)
+    reaction = PhotoReaction(energy_to_J(tsh_energy[2]), map(Float32, final_speeds_ion), sun_tuple, snames[2], false)
     product_velocities = [simulate_photoionisation(reaction, photon_energy)]
-    product_types = [species_name[2][2]]
+    product_types = [snames[2][2]]
 
     return product_velocities, product_types
 end
 
-function DPI_logic(photon_energy::Real, species_name::NTuple{3, String}, tsh_energy::Float32, parent_velocity::NTuple{3, Float32}, sun_tuple::NTuple{3, Float32})
-    return DPI_logic(Float32(photon_energy), species_name, tsh_energy, parent_velocity, sun_tuple)
+function DPI_logic(photon_energy::Real, snames::NTuple{3, String}, tsh_energy::Float32, parent_velocity::NTuple{3, Float32}, sun_tuple::NTuple{3, Float32})
+    return DPI_logic(Float32(photon_energy), snames, tsh_energy, parent_velocity, sun_tuple)
 end
 
 
 """
-    DiPI_logic(photon_energy, species_name, tsh_energy, parent_velocity, sun_tuple): 
+    DiPI_logic(photon_energy, snames, tsh_energy, parent_velocity, sun_tuple): 
 
 # OBJECTIVE:
 - Handles Dissociative PhotoIonisation (DiPI) logic
@@ -155,7 +155,7 @@ end
 
 # INPUTS:
 - `photon_energy::Float32` -> Photon Energy in J
-- `species_name::NTuple{2, NTuple{3, String}}` -> Tuple congtaining 2 elements. 
+- `snames::NTuple{2, NTuple{3, String}}` -> Tuple congtaining 2 elements. 
     * Each of these elements is a 3D Tuple containing names of parent, and daughter (x2) species
     * The first Tuple will correspond to the ionisation, and will contain name of parent (e.g. H2O), ionized parent (H2O(+)), and electron (e(-)). NO ELECTRONIC STATES MUST BE GIVEN HERE IN PARENTHESIS
     * The second to the second consequent dissociation and will contain name of parent, heavy daughter species, and light daughter species. This will POTENTIALLY Includes ELECTRONIC STATES IN PARENTHESIS
@@ -168,23 +168,23 @@ end
 - `product_types` -> 2-element vector containing String objects -> Name of the 2 daughter species. 
     Only considers "plain" atomic/molecular species, meaning no information about electronic states is given.
 """
-function DiPI_logic(photon_energy::Float32, species_name::NTuple{2, NTuple{3, String}}, tsh_energy::NTuple{2, Float32}, parent_velocity::NTuple{3, Float32}, sun_tuple::NTuple{3, Float32})
-    reaction = PhotoReaction(energy_to_J(tsh_energy[1]), parent_velocity, sun_tuple, species_name[1], false)
+function DiPI_logic(photon_energy::Float32, snames::NTuple{2, NTuple{3, String}}, tsh_energy::NTuple{2, Float32}, parent_velocity::NTuple{3, Float32}, sun_tuple::NTuple{3, Float32})
+    reaction = PhotoReaction(energy_to_J(tsh_energy[1]), parent_velocity, sun_tuple, snames[1], false)
     final_speeds_ion = simulate_photoionisation(reaction, photon_energy)
 
-    product_names = map(s -> replace(s, r"\(\+\)" => ""), species_name[2])
+    product_names = map(s -> replace(s, r"\(\+\)" => ""), snames[2])
     
     reaction = PhotoReaction(energy_to_J(tsh_energy[2]), map(Float32, final_speeds_ion), sun_tuple, product_names, false)
     final_speeds_light, final_speeds_heavy = simulate_photodissociation(reaction, photon_energy)
     
     product_velocities = [final_speeds_heavy, final_speeds_light]
-    product_types = [species_name[2][2], species_name[2][3]]
+    product_types = [snames[2][2], snames[2][3]]
 
     return product_velocities, product_types
 end
 
-function DiPI_logic(photon_energy::Real, species_name::NTuple{3, String}, tsh_energy::Float32, parent_velocity::NTuple{3, Float32}, sun_tuple::NTuple{3, Float32})
-    return DiPI_logic(Float32(photon_energy), species_name, tsh_energy, parent_velocity, sun_tuple)
+function DiPI_logic(photon_energy::Real, snames::NTuple{3, String}, tsh_energy::Float32, parent_velocity::NTuple{3, Float32}, sun_tuple::NTuple{3, Float32})
+    return DiPI_logic(Float32(photon_energy), snames, tsh_energy, parent_velocity, sun_tuple)
 end
 
 
