@@ -197,7 +197,7 @@ end
 # INPUTS:
 - `current_reaction::CurrentReaction` -> contains information on current photoreaction (see photodatabase.jl)
 - `photochemical_info::Species` -> contains photochemical dtabase for parent species (see general_construct.jl)
-- `parent_velocity::NTuple{3, Float32}` -> 3D tuple with aprent velocity
+- `parent_velocity::NTuple{3, Float32}` -> 3D tuple with parent velocity
 - `sun_tuple:: NTuple{3, Float32}` -> 3D tuple containing direction of incident photons
 - `photon_energy::Real` -> in J
 """
