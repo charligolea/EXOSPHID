@@ -2,6 +2,16 @@
 # Main Struct for Ionisation and Dissociation Reactions
 # ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 
+"""
+    STRUCT PhotoReaction()
+
+- `E_bond::Float32` -> Threshold energy for given photodissociation or photoionisation reaction in J -> USER INPUT
+- `v_parent::NTuple{3, Float32}` -> Velocity of the parent molecule in m/s (H2O, OH, H2) -> USER INPUT
+- `sun_tuple::NTuple{3, Float32}` -> Solar vector === direction of incoming photons
+- `product_names::NTuple{3, String}` -> USER INPUT -> Dict containing all involved species names. Must contain 3 keys: "parent_name", "heavy_child_name", "light_child_name""
+- `product_types::NTuple{3, String}` -> Extracts elements in parenthesis, duch as electronic states, from product names (e.g. OH(X^2Pi) -> OH)
+- `display_info::Bool` -> Set true if you want to print photoproduct velocity analysis at the end
+"""
 struct PhotoReaction
     E_bond::Float32 # Threshold energy for given photodissociation or photoionisation reaction in J -> USER INPUT
     v_parent::NTuple{3, Float32} # Velocity of the parent molecule in m/s (H2O, OH, H2) -> USER INPUT
@@ -57,12 +67,14 @@ end
 
 
 """ 
-#:: FUNCTION: calculate_photon_momentum(E_photon, sun_tuple)
-#-------------------------------------------------------------------------------------------
+    calculate_photon_momentum(E_photon, sun_tuple)
+-------------------------------------------------------------------------------------------
 # Arguments
-- E_photon: in J  
+- `E_photon::Real` -> in J  
+- `sun_tuple::NTuple{3, Float32}` -> Solar vector === direction of incoming photons
 
-# Output: Momentum vector for the photon in kg*m/s
+# Output:
+- Momentum vector for the photon in kg*m/s
 """
 calculate_photon_momentum(E_photon::Real, sun_tuple::NTuple{3, Float32}) = (E_photon/c) .* sun_tuple
 

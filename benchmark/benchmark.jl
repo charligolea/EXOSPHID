@@ -6,19 +6,25 @@ if !isdefined(Main, :EXOSPHID)
     using .EXOSPHID
 end
 
+"""
+    const velocities
+
+- Sample values of parent velocities for the different EXOSPHID species.
+- Determined from thermal velocity distributions for an assumed temperature of 250 K (average for the Moon)
+"""
 const velocities = Dict("H2O" => 590, "OH" => 605, "H2" => 1750, "H" => 2500, "H(-)"=> 2500, "HO2" => 425, "H2O2" => 435, "He" => 1250, "Ne" => 560)
 
 """
-#:: FUNCTION: photobenchmark(dt, solar_activity, parent_name)
+    photobenchmark(dt, solar_activity, parent_name)
 
-# OBJECTIVE: Evaluate computational performance of EXOSPHID
+# OBJECTIVE:
+- Evaluate computational performance of EXOSPHID
 
 # INPUTS:
-- dt: Time Window in seconds
-- solar_activity: From 0 (Quiet Sun) to 1 (Active Sun)
-- parent_name: String with parent molecule type. See exosphid_species variable in photodatabase.jl for possible species
+- `dt::Float32` -> Time Window in seconds
+- `solar_activity::Float32` -> From 0 (Quiet Sun) to 1 (Active Sun)
+- `parent_name::String` -> String with parent molecule type. See exosphid_species variable in photodatabase.jl for possible species
 """
-
 function photobenchmark(dt::Float32, solar_activity::Float32, parent_name::String)
 
     print("\nStarting Numerical Benchmark for $(parent_name)\n")
@@ -37,16 +43,15 @@ end
 
 
 """
-#:: FUNCTION: allocations(dt, solar_activity, parent_name)
+    allocations(dt, solar_activity, parent_name)
 
 # OBJECTIVE: Evaluate allocations in detail
 
 # INPUTS:
-- dt: Time Window in seconds
-- solar_activity: From 0 (Quiet Sun) to 1 (Active Sun)
-- parent_name: String with parent molecule type. See exosphid_species variable in photodatabase.jl for possible species
+- `dt::Float32` -> Time Window in seconds
+- `solar_activity::Float32` -> From 0 (Quiet Sun) to 1 (Active Sun)
+- `parent_name::String` -> String with parent molecule type. See exosphid_species variable in photodatabase.jl for possible species
 """
-
 function allocations(dt::Float32, solar_activity::Float32, parent_name::String)
 
     println("\nStarting Allocation Profiler for $(parent_name)\n")

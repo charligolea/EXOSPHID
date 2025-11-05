@@ -1,29 +1,29 @@
 """ 
-#:: FUNCTION: calculate_excess_energy_ionisation(E_bond, E_photon)
-#-------------------------------------------------------------------------------------------
+    calculate_excess_energy_ionisation(E_bond, E_photon)
+-------------------------------------------------------------------------------------------
 # Arguments
-- E_bond:: Ionisation energy in J
-- E_photon in J
+- `E_bond::Float32` -> Ionisation energy in J
+- `E_photon::Float32` -> In in J
 
 # OBJECTIVE: 
 - Calculate excess energy with a simplified approach
 - For ionization, we neglect vibrorotational contributions compared to the energy of the photon and electron
 
-# Output: Excess energy in J
+# Output:
+- Excess energy in J
 """
-
 calculate_excess_energy_ionisation(E_bond::Float32, E_photon::Float32) = E_photon - E_bond
 
 
 
 """ 
-#:: FUNCTION: allocate_velocity_ionisation(reaction, E_excess, species_masses, p_photon)
-#-------------------------------------------------------------------------------------------
+    allocate_velocity_ionisation(reaction, E_excess, species_masses, p_photon)
+-------------------------------------------------------------------------------------------
 # Arguments
-- reaction:: PhotoReaction object
-- E_excess in J
-- species_masses: scalar mass of parent species in kg
-- p_photon: 3D Tuple in kg*m/s
+- `reaction::PhotoReaction` -> PhotoReaction object
+- `E_excess::Real` -> in J
+- `species_masses::Float64` -> species scalar mass of parent species in kg
+- `p_photon::NTuple{3, Real}` -> 3D Tuple in kg*m/s
 
 # OBJECTIVE: 
 - Calculate velocities for the photoionisation products according to the moment and energy conservation equations
@@ -32,8 +32,7 @@ calculate_excess_energy_ionisation(E_bond::Float32, E_photon::Float32) = E_photo
 # Output:
 - v_ion_tuple: 3D Tuple containing velocity components for the ionised parent
 """
-
-function allocate_velocity_ionisation(reaction::PhotoReaction, E_excess, species_masses::Float64, p_photon)
+function allocate_velocity_ionisation(reaction::PhotoReaction, E_excess::Real, species_masses::Float64, p_photon::NTuple{3, Real})
 
     # 1. Get unitary vector for photon
     u_ph = reaction.sun_tuple
@@ -64,11 +63,11 @@ end
 
 
 """
-#:: FUNCTION: simulate_photoionisation(reaction, E_photon)
-#-------------------------------------------------------------------------------------------
+    simulate_photoionisation(reaction, E_photon)
+-------------------------------------------------------------------------------------------
 # Arguments
-- reaction:: PhotoReaction object
-- E_photon in J
+- `reaction::PhotoReaction`
+- `E_photon::Float32` -> In in J
 
 # OBJECTIVE: 
 - Simulate a single photoionisation reaction that has previously been determined from the database
@@ -76,7 +75,6 @@ end
 # Output: Output from allocate_velocity()
 - v_ion_tuple: 3D Tuple containing velocity components for the ionised parent
 """
-
 function simulate_photoionisation(reaction::PhotoReaction, E_photon::Float32)
 
     # 1. Calculate photon linear momentum magnitude (kg*m/s)
@@ -100,11 +98,11 @@ end
 
 
 """
-#:: FUNCTION: multiple_photoionisation(reaction, energy_vector)
-#-------------------------------------------------------------------------------------------
+    multiple_photoionisation(reaction, energy_vector)
+-------------------------------------------------------------------------------------------
 # Arguments
-- reaction:: PhotoReaction object
-- energy_vector: contains N scalar values of photon energy in J in the wavelength range of choice
+- `reaction::PhotoReaction`
+- `energy_vector::Vector{Float32}` -> contains N scalar values of photon energy in J in the wavelength range of choice
 
 # OBJECTIVE: 
 - Function to simulate multiple ionisation reactions
@@ -114,7 +112,6 @@ AND wavelength range  AND reaction type and compare to literature values
 # Output: Outputs from allocate_velocity()
 - final_speeds_ion: Array of Size N. Every element is a 3D Tuple containing velocity components for the ionised parent
 """
-
 function multiple_photoionisation(reaction::PhotoReaction, energy_vector::Vector{Float32})
 
     if reaction.display_info
@@ -150,18 +147,17 @@ end
 
 
 """
-#:: FUNCTION: show_info(reaction, final_speeds_heavy, final_speeds_light)
-#-------------------------------------------------------------------------------------------
+    show_info_ionisation(reaction, final_speeds_heavy, final_speeds_light)
+-------------------------------------------------------------------------------------------
 # Arguments
-- reaction:: PhotoReaction object
-- final_speeds_ion: output from multiple_photoionisation
+- `reaction::PhotoReaction`
+- `final_speeds_ion::Vector{NTuple{3, Float64}}` -> output from multiple_photoionisation
 
 # OBJECTIVE: 
 - For the multiple ionisation case, show statistics of mean, median and STD speeds
 - Only if display_info is set true
 """
-
-function show_info_ionisation(reaction::PhotoReaction, final_speeds_ion)
+function show_info_ionisation(reaction::PhotoReaction, final_speeds_ion::Vector{Any})
     final_speeds_ion_norm = [norm(p) for p in final_speeds_ion]
 
     data_speeds = DataFrame(
@@ -178,4 +174,3 @@ export calculate_excess_energy_ionisation
 export allocate_velocity_ionisation
 export simulate_photoionisation
 export multiple_photoionisation
-export show_info_ionisation

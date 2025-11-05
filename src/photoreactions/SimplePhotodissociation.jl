@@ -3,21 +3,21 @@
 # ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 
 """ 
-#:: FUNCTION: calculate_excess_energy_dissociation(reaction, m_parent, E_photon)
-#-------------------------------------------------------------------------------------------
-# Arguments
-- reaction:: PhotoReaction object
-- m_parent: mass of parent species in kg
-- E_photon in J
+    calculate_excess_energy_dissociation(reaction, m_parent, E_photon)
+-------------------------------------------------------------------------------------------
+
+# Arguments 
+- `reaction::PhotoReaction`
+- `m_parent:: Float64` -> mass of parent species in kg
+- `E_photon::Real` -> in J
 
 # OBJECTIVE: 
 - Calculate excess energy taking into consideration vibrorotational energies of parents and products.
-- OH is a special case, as it is predissociated by the photon. To understand the theory behind 
-predissociation and simulation chocies for EXOSPHID, refer to WIKI
+- OH is a special case, as it is predissociated by the photon. To understand the theory behind predissociation and simulation chocies for EXOSPHID, refer to WIKI
 
-# Output: Excess energy in J
+# Output: 
+- Excess energy in J
 """
-
 function calculate_excess_energy_dissociation(reaction::PhotoReaction, m_parent::Float64, E_photon::Real)
 
     if reaction.product_types[1] == "OH" && reaction.product_names[1] != "OH(DPD)"
@@ -36,13 +36,14 @@ end
 
 
 """ 
-#:: FUNCTION: allocate_velocity(reaction, E_excess, species_masses, p_photon)
-#-------------------------------------------------------------------------------------------
+    allocate_velocity(reaction, E_excess, species_masses, p_photon)
+-------------------------------------------------------------------------------------------
+
 # Arguments
-- reaction:: PhotoReaction object
-- E_excess in J
-- species_masses: 3D Tuple containing: [1]: parent mass, [2]: heavy product mass, [3]: light product mass
-- p_photon: 3D Tuple in kg*m/s
+- `reaction::PhotoReaction`
+- `E_excess::Real` -> in J
+- `species_masses::NTuple{3, Float64}` -> 3D Tuple containing: [1]: parent mass, [2]: heavy product mass, [3]: light product mass
+- `p_photon::NTuple{3, Real}` -> 3D Tuple in kg*m/s
 
 # OBJECTIVE: 
 - Calculate velocities for the photodissociation products according to the moment and energy conservation equations
@@ -52,8 +53,7 @@ end
 - v_heavy_tuple: 3D Tuple containing velocity components for the heavier photolysis product (e.g., for H2O -> OH + H, it would be OH)
 - v_light_tuple: 3D Tuple containing velocity components for the lighter photolysis product (e.g., for H2O -> OH + H, it would be H)
 """
-
-function allocate_velocity_dissociation(reaction::PhotoReaction, E_excess, species_masses, p_photon)
+function allocate_velocity_dissociation(reaction::PhotoReaction, E_excess::Real, species_masses::NTuple{3, Float64}, p_photon::NTuple{3, Real})
 
     # 1. Get unitary vector for photon
     u_ph = reaction.sun_tuple
@@ -84,11 +84,12 @@ end
 
 
 """
-#:: FUNCTION: simulate_photodissociation(reaction, E_photon)
-#-------------------------------------------------------------------------------------------
+    simulate_photodissociation(reaction, E_photon)
+-------------------------------------------------------------------------------------------
+
 # Arguments
-- reaction:: PhotoReaction object
-- E_photon in J
+- `reaction::PhotoReaction` object
+- `E_photon::Float32` -> in J
 
 # OBJECTIVE: 
 - Simulate a single photodissociation reaction that has previously been determined from the database
@@ -97,7 +98,6 @@ end
 - v_heavy_tuple: 3D Tuple containing velocity components for the heavier photolysis product (e.g., for H2O -> OH + H, it would be OH)
 - v_light_tuple: 3D Tuple containing velocity components for the lighter photolysis product (e.g., for H2O -> OH + H, it would be H)
 """
-
 function simulate_photodissociation(reaction::PhotoReaction, E_photon::Float32)
 
     # 1. Calculate photon linear momentum magnitude (kg*m/s)
@@ -121,11 +121,12 @@ end
 
 
 """
-#:: FUNCTION: simulate_photodissociation(reaction, energy_vector)
-#-------------------------------------------------------------------------------------------
+    simulate_photodissociation(reaction, energy_vector)
+-------------------------------------------------------------------------------------------
+
 # Arguments
-- reaction:: PhotoReaction object
-- energy_vector: contains N scalar values of photon energy in J in the wavelength range of choice
+- `reaction::PhotoReaction` object
+- `energy_vector::Vector{Float32}` -> contains N scalar values of photon energy in J in the wavelength range of choice
 
 # OBJECTIVE: 
 - Function to simulate multiple photodissociation reactions
@@ -170,18 +171,19 @@ end
 
 
 """
-#:: FUNCTION: show_info(reaction, final_speeds_heavy, final_speeds_light)
-#-------------------------------------------------------------------------------------------
+    show_info(reaction, final_speeds_heavy, final_speeds_light)
+-------------------------------------------------------------------------------------------
+
 # Arguments
-- reaction:: PhotoReaction object
-- final_speeds_heavy, final_speeds_light: outputs from multiple_photodissociation
+- `reaction::PhotoReaction` object
+- `final_speeds_heavy::Vector{Any}, final_speeds_light::Vector{Any}` -> outputs from multiple_photodissociation
 
 # OBJECTIVE: 
 - For the multiple photodssociation case, show statistics of mean, median and STD speeds
 - Only if display_info is set true
 """
 
-function show_info_dissociation(reaction::PhotoReaction, final_speeds_heavy, final_speeds_light)
+function show_info_dissociation(reaction::PhotoReaction, final_speeds_heavy::Vector{Any}, final_speeds_light::Vector{Any})
     final_speeds_heavy_norms = [norm(p) for p in final_speeds_heavy]
     final_speeds_light_norms = [norm(p) for p in final_speeds_light]
 
@@ -203,4 +205,3 @@ export calculate_excess_energy_dissociation
 export allocate_velocity_dissociation
 export simulate_photodissociation
 export multiple_photodissociation
-export show_info_dissociation
