@@ -4,7 +4,7 @@ println("TESTING of solar_database.jl ...............  ")
 
 
     @testset verbose=true "Wavelength array correctly sorted" begin
-        @test issorted(solar_wavelength)
+        @test issorted(EXOSPHID.solar_wavelength)
     end
 
     @testset verbose=true "Normalized Solar Flux Database Size" begin
@@ -14,8 +14,8 @@ println("TESTING of solar_database.jl ...............  ")
 
             @testset "$pt" begin
                 @testset "Array Lengths" begin
-                    @test length(fq) == length(solar_wavelength)
-                    @test length(fa) == length(solar_wavelength)
+                    @test length(fq) == length(EXOSPHID.solar_wavelength)
+                    @test length(fa) == length(EXOSPHID.solar_wavelength)
                 end
 
                 @testset "Normalization" begin
@@ -33,8 +33,8 @@ println("TESTING of solar_database.jl ...............  ")
 
             @testset "$pt" begin
                 @testset "Array Lengths" begin
-                    @test length(fq) == length(solar_wavelength)
-                    @test length(fa) == length(solar_wavelength)
+                    @test length(fq) == length(EXOSPHID.solar_wavelength)
+                    @test length(fa) == length(EXOSPHID.solar_wavelength)
                 end
             end
         end
@@ -47,8 +47,8 @@ println("TESTING of solar_database.jl ...............  ")
             nq, na = get_normalized_fluxes(pt)
 
             @testset "$pt" begin
-                @test all(isapprox.(nq, normalize_flux_distribution(solar_wavelength, sq, (1, 95000))[2] ; rtol=1e-6))
-                @test all(isapprox.(na, normalize_flux_distribution(solar_wavelength, sa, (1, 95000))[2] ; rtol=1e-6))
+                @test all(isapprox.(nq, EXOSPHID.normalize_flux_distribution(EXOSPHID.solar_wavelength, sq, (1, 95000))[2] ; rtol=1e-6))
+                @test all(isapprox.(na, EXOSPHID.normalize_flux_distribution(EXOSPHID.solar_wavelength, sa, (1, 95000))[2] ; rtol=1e-6))
             end
         end
     end

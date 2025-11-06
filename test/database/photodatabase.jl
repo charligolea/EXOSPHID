@@ -7,7 +7,7 @@ println("TESTING photodatabase.jl ...............")
     # 0. Test that database exists
     @testset verbose=true "Database exists for all parents in exosphid_species" begin
         for parent in exosphid_species
-            @test isfile(joinpath(@__DIR__, "../../src/database/species/$parent.jl"))
+            @test isfile(joinpath(@__DIR__, "..", "..", "src", "database", "species", "$parent.jl"))
         end
     end
 
@@ -111,7 +111,7 @@ println("TESTING photodatabase.jl ...............")
             @testset verbose=true "Postive Photodestruction rates" begin
                 @test photo_info.quiet_rate > 0
                 @test photo_info.quiet_rate > 0
-                @test get_photodestruction_rates(photo_info, rand(Float32), 1.0) > 0
+                @test EXOSPHID.get_photodestruction_rates(photo_info, rand(Float32), 1.0) > 0
             end
 
             @testset verbose=true "Photorates consistent with fluxes" begin
@@ -144,7 +144,7 @@ end
 
 
 @testset verbose = true "is_photoreaction_occuring" begin
-    @test is_photoreaction_occuring(rand(Float32), rand(Float32)) isa Bool
+    @test EXOSPHID.is_photoreaction_occuring(rand(Float32), rand(Float32)) isa Bool
 end
 
 @testset verbose = true "get_current_reaction" begin
@@ -192,10 +192,10 @@ end
                             push!(tested_states, sp)
                             @testset verbose=true "$sp" begin
                                 @testset verbose=true "Available" begin
-                                    @test get_vibrorotational_energy(sp) !== nothing
+                                    @test EXOSPHID.get_vibrorotational_energy(sp) !== nothing
                                 end
                                 @testset verbose=true "Positive" begin
-                                    @test get_vibrorotational_energy(sp) >=0.0
+                                    @test EXOSPHID.get_vibrorotational_energy(sp) >=0.0
                                 end
                             end
                         end
@@ -206,10 +206,10 @@ end
                             push!(tested_states, sp)
                             @testset verbose=true "$sp" begin
                                 @testset verbose=true "Available" begin
-                                    @test get_vibrorotational_energy(sp) !== nothing
+                                    @test EXOSPHID.get_vibrorotational_energy(sp) !== nothing
                                 end
                                 @testset verbose=true "Positive" begin
-                                    @test get_vibrorotational_energy(sp) >= 0.0
+                                    @test EXOSPHID.get_vibrorotational_energy(sp) >= 0.0
                                 end
                             end
                         end
@@ -220,10 +220,10 @@ end
                             push!(tested_states, sp)
                             @testset verbose=true "$sp" begin
                                 @testset verbose=true "Available" begin 
-                                    @test get_vibrorotational_energy(sp) !== nothing
+                                    @test EXOSPHID.get_vibrorotational_energy(sp) !== nothing
                                 end
                                 @testset verbose=true "Positive" begin 
-                                    @test get_vibrorotational_energy(sp) >= 0.0
+                                    @test EXOSPHID.get_vibrorotational_energy(sp) >= 0.0
                                 end
                             end
                         end
@@ -250,10 +250,10 @@ end
                     push!(tested_states, sp_OH)
                     @testset verbose=true "$sp_OH" begin
                         @testset verbose=true "Available" begin
-                            @test get_electronic_energy_predis(sp_OH) !== nothing
+                            @test EXOSPHID.get_electronic_energy_predis(sp_OH) !== nothing
                         end
                         @testset verbose=true "Positive" begin
-                            @test get_electronic_energy_predis(sp_OH) >=0.0
+                            @test EXOSPHID.get_electronic_energy_predis(sp_OH) >=0.0
                         end
                     end
                 end
@@ -265,14 +265,14 @@ end
 
 @testset verbose = true "SPECIES MASSES" begin
     @testset verbose=true "Mass available for given species" begin
-        @test length(mass_species) == length(mass_dict)
+        @test length(EXOSPHID.mass_species) == length(EXOSPHID.mass_dict)
     end
     @testset verbose=true "Masses are positive and within expected range" begin
-        @test all(0 .<= mass_dict .<= 300*m_fund)
+        @test all(0 .<= EXOSPHID.mass_dict .<= 300*EXOSPHID.m_fund)
     end
     @testset "get_masses returns numeric values" begin
         for sp in exosphid_species
-            masses = get_masses(sp, mode="PI")
+            masses = EXOSPHID.get_masses(sp, mode="PI")
             @test masses !== nothing
             @test masses isa Float64
         end
