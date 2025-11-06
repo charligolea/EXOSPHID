@@ -50,8 +50,8 @@ end
 - The derivations of the quadratic equation can be consulted in the EXOSPHID WIKI
 
 # Output:
-- v_heavy_tuple: 3D Tuple containing velocity components for the heavier photolysis product (e.g., for H2O -> OH + H, it would be OH)
-- v_light_tuple: 3D Tuple containing velocity components for the lighter photolysis product (e.g., for H2O -> OH + H, it would be H)
+- `v_heavy_tuple`: 3D Tuple containing velocity components for the heavier photolysis product (e.g., for H2O -> OH + H, it would be OH)
+- `v_light_tuple`: 3D Tuple containing velocity components for the lighter photolysis product (e.g., for H2O -> OH + H, it would be H)
 """
 function allocate_velocity_dissociation(reaction::PhotoReaction, E_excess::Real, species_masses::NTuple{3, Float64}, p_photon::NTuple{3, Real})
 
@@ -94,9 +94,9 @@ end
 # OBJECTIVE: 
 - Simulate a single photodissociation reaction that has previously been determined from the database
 
-# Output: Outputs from allocate_velocity()
-- v_heavy_tuple: 3D Tuple containing velocity components for the heavier photolysis product (e.g., for H2O -> OH + H, it would be OH)
-- v_light_tuple: 3D Tuple containing velocity components for the lighter photolysis product (e.g., for H2O -> OH + H, it would be H)
+# Output: Outputs from `allocate_velocity()`
+- `v_heavy_tuple`: 3D Tuple containing velocity components for the heavier photolysis product (e.g., for H2O -> OH + H, it would be OH)
+- `v_light_tuple`: 3D Tuple containing velocity components for the lighter photolysis product (e.g., for H2O -> OH + H, it would be H)
 """
 function simulate_photodissociation(reaction::PhotoReaction, E_photon::Float32)
 
@@ -121,7 +121,7 @@ end
 
 
 """
-    simulate_photodissociation(reaction, energy_vector)
+    multiple_photodissociation(reaction, energy_vector)
 -------------------------------------------------------------------------------------------
 
 # Arguments
@@ -133,11 +133,10 @@ end
 - Particularly interesting for validation studies ehere we want to generate multiple photons at the same time for a specific parent 
 AND wavelength range  AND reaction type and compare to literature values
 
-# Output: Outputs from allocate_velocity()
-- final_speeds_light: Array of Size N. Every element is a 3D Tuple containing velocity components for the heavier photolysis product (e.g., for H2O -> OH + H, it would be OH)
-- final_speeds_heavy: Array of Size N. Every element is a 3D Tuple containing velocity components for the lighter photolysis product (e.g., for H2O -> OH + H, it would be H)
+# Output: Outputs from `allocate_velocity()`
+- `final_speeds_light`: Array of Size N. Every element is a 3D Tuple containing velocity components for the heavier photolysis product (e.g., for H2O -> OH + H, it would be OH)
+- `final_speeds_heavy`: Array of Size N. Every element is a 3D Tuple containing velocity components for the lighter photolysis product (e.g., for H2O -> OH + H, it would be H)
 """
-
 function multiple_photodissociation(reaction::PhotoReaction, energy_vector::Vector{Float32})
 
     if reaction.display_info
@@ -176,13 +175,12 @@ end
 
 # Arguments
 - `reaction::PhotoReaction` object
-- `final_speeds_heavy::Vector{Any}, final_speeds_light::Vector{Any}` -> outputs from multiple_photodissociation
+- `final_speeds_heavy::Vector{Any}, final_speeds_light::Vector{Any}` -> outputs from `multiple_photodissociation`
 
 # OBJECTIVE: 
 - For the multiple photodssociation case, show statistics of mean, median and STD speeds
 - Only if display_info is set true
 """
-
 function show_info_dissociation(reaction::PhotoReaction, final_speeds_heavy::Vector{Any}, final_speeds_light::Vector{Any})
     final_speeds_heavy_norms = [norm(p) for p in final_speeds_heavy]
     final_speeds_light_norms = [norm(p) for p in final_speeds_light]
@@ -201,7 +199,5 @@ end
 # EXPORTS
 # ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 
-export calculate_excess_energy_dissociation
-export allocate_velocity_dissociation
 export simulate_photodissociation
 export multiple_photodissociation

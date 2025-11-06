@@ -30,7 +30,7 @@ calculate_excess_energy_ionisation(E_bond::Float32, E_photon::Float32) = E_photo
 - The derivations of the quadratic equation can be consulted in the EXOSPHID WIKI
 
 # Output:
-- v_ion_tuple: 3D Tuple containing velocity components for the ionised parent
+- `v_ion_tuple`: 3D Tuple containing velocity components for the ionised parent
 """
 function allocate_velocity_ionisation(reaction::PhotoReaction, E_excess::Real, species_masses::Float64, p_photon::NTuple{3, Real})
 
@@ -72,8 +72,8 @@ end
 # OBJECTIVE: 
 - Simulate a single photoionisation reaction that has previously been determined from the database
 
-# Output: Output from allocate_velocity()
-- v_ion_tuple: 3D Tuple containing velocity components for the ionised parent
+# Output: Output from `allocate_velocity()`
+- `v_ion_tuple`: 3D Tuple containing velocity components for the ionised parent
 """
 function simulate_photoionisation(reaction::PhotoReaction, E_photon::Float32)
 
@@ -109,8 +109,8 @@ end
 - Particularly interesting for validation studies ehere we want to generate multiple photons at the same time for a specific parent 
 AND wavelength range  AND reaction type and compare to literature values
 
-# Output: Outputs from allocate_velocity()
-- final_speeds_ion: Array of Size N. Every element is a 3D Tuple containing velocity components for the ionised parent
+# Output: Outputs from `allocate_velocity()`
+- `final_speeds_ion`: Array of Size N. Every element is a 3D Tuple containing velocity components for the ionised parent
 """
 function multiple_photoionisation(reaction::PhotoReaction, energy_vector::Vector{Float32})
 
@@ -151,11 +151,11 @@ end
 -------------------------------------------------------------------------------------------
 # Arguments
 - `reaction::PhotoReaction`
-- `final_speeds_ion::Vector{NTuple{3, Float64}}` -> output from multiple_photoionisation
+- `final_speeds_ion::Vector{NTuple{3, Float64}}` -> output from `multiple_photoionisation`
 
 # OBJECTIVE: 
 - For the multiple ionisation case, show statistics of mean, median and STD speeds
-- Only if display_info is set true
+- Only if `display_info` is set true
 """
 function show_info_ionisation(reaction::PhotoReaction, final_speeds_ion::Vector{Any})
     final_speeds_ion_norm = [norm(p) for p in final_speeds_ion]
@@ -170,7 +170,5 @@ function show_info_ionisation(reaction::PhotoReaction, final_speeds_ion::Vector{
 end
 
 
-export calculate_excess_energy_ionisation
-export allocate_velocity_ionisation
 export simulate_photoionisation
 export multiple_photoionisation
