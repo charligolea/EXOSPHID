@@ -14,7 +14,7 @@ The idea is to run it many times (thousands to millions) to compare to reported 
 
 # Arguments
 - `solar_activity::Float32` -> From 0 (Quiet Sun) to 1 (Active Sun)
-- `parent_type::String` -> String with parent molecule type in `exosphid_species``
+- `parent_type::String` -> String with parent molecule type in `exosphid_species`
 - `num_reactions::Int` -> Number of photon interactions to simulate for every possible reaction    
 """
 function validate_exothermic_velocities(parent_type::String, solar_activity::Float32, num_reactions::Int)
