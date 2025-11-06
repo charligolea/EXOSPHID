@@ -77,6 +77,3 @@ end
 - Momentum vector for the photon in kg*m/s
 """
 calculate_photon_momentum(E_photon::Real, sun_tuple::NTuple{3, Float32}) = (E_photon/c) .* sun_tuple
-
-export PhotoReaction
-export calculate_photon_momentum
