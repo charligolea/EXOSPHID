@@ -69,5 +69,3 @@ He = Species(
     rt_He,
     wv_He
 )
-
-export He

@@ -110,5 +110,3 @@ OH = Species(
     rt_OH,
     wv_OH
 )
-
-export OH

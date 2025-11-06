@@ -80,5 +80,3 @@ H_ = Species(
     rt_H_,
     wv_H_
 )
-
-export H_

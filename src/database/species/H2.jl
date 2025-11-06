@@ -95,5 +95,3 @@ H2 = Species(
     rt_H2,
     wv_H2
 )
-
-export H2

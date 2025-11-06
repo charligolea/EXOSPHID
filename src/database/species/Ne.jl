@@ -70,5 +70,3 @@ Ne = Species(
     rt_Ne,
     wv_Ne
 )
-
-export Ne

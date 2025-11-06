@@ -68,5 +68,3 @@ H2O2 = Species(
     rt_H2O2,
     wv_H2O2
 )
-
-export H2O2
