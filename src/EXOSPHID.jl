@@ -61,5 +61,5 @@ If you want to use the latest development version, you can install the package a
 Pkg.add("https://github.com/charligolea/EXOSPHID.jl.git#dev")
 ```
 """
-
+EXOSPHID
 end
