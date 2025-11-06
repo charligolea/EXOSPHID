@@ -846,5 +846,3 @@ end
 
 export get_normalized_fluxes
 export get_standard_fluxes
-
-export solar_wavelength
