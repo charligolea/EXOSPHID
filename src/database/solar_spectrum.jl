@@ -1,20 +1,21 @@
+""" 
+`h`: Planck Constant in m^2 kg / s
+"""
 const h  = 6.62607015f-34 # m2 kg / s
 
 """ 
-#:: FUNCTION: normalize_flux_distribution(wavelengths, solar_fluxes, wvl_range)
+    normalize_flux_distribution(wavelengths, solar_fluxes, wvl_range)
 -------------------------------------------------------------------------------------------
 
-INPUTS: 
-- wavelengths::  solar_wavelength data from Huebner (2015)
-- solar_fluxes::  Solar fluxes in photons/s (already includes cross section dependency)
-- min_wavelength:: Lower bound for wavelength interval to study
-- max_wavelength:: Upper bound for wavelength interval to study
+# INPUTS: 
+- `wavelengths::NTuple{N, Int32}` ->  `solar_wavelength` data from Huebner (2015)
+- `solar_fluxes::NTuple{N, Float32}` ->  Solar fluxes in photons/s (already includes cross section dependency)
+- `wvl_range::NTuple{2, Float32})` -> Lower and upper bound for wavelength range, expressed in Angstrom
 
-OUTPUTS:
-- filtered_wavelengths:: new wavelength tuple
-- normalized_fluxes:: weighted probabilities for new wavelength vector
+# OUTPUTS:
+- `filtered_wavelengths` -> new wavelength tuple
+- `normalized_fluxes` -> weighted probabilities for new wavelength vector
 """
-
 function normalize_flux_distribution(wavelengths::NTuple{N, Int32}, solar_fluxes::NTuple{N, Float32}, wvl_range::NTuple{2, Float32})  where {N}
 
     @assert length(wavelengths) == length(solar_fluxes) "wavelengths and solar_fluxes must have the same length"
@@ -65,14 +66,15 @@ end
 
 
 """
-#:: FUNCTION: generate_weighted_random_wvl(wavelengths, normalized_fluxes)
--------------------------------------------------------------------------------------------
+    FUNCTION: generate_weighted_random_wvl(wavelengths, normalized_fluxes)
+# -------------------------------------------------------------------------------------------
 
-OBJECTIVE: Generate random wavelength according to the given weights derived from the species dependent photon flux in photons/s
+# OBJECTIVE:
+- Generate random wavelength according to the given weights derived from the species dependent photon flux in photons/s
 
-INPUTS: 
-- wavelengths::  wavelength tuple
-- normalized_fluxes:: weighted probabilities for new wavelength vector
+# INPUTS: 
+- `wavelengths::NTuple{N,Int32}` ->  wavelength tuple
+- `normalized_fluxes::NTuple{N,Float32})` -> weighted probabilities for new wavelength vector
 
 OUTPUTS:
 - wavelength value in Armstrong
@@ -93,20 +95,21 @@ end
 
 
 """
-#:: FUNCTION: generate_energy_vector(wavelengths, normalized_fluxes, num_reactions)
+    generate_energy_vector(wavelengths, normalized_fluxes, num_reactions)
 -------------------------------------------------------------------------------------------
 
-OBJECTIVE: Generate vector of size num_reactions with random energies and wavelengths according to the given weights derived from the species dependent photon flux in photons/s
+# OBJECTIVE:
+- # Generate vector of size num_reactions with random energies and wavelengths according to the given weights derived from the species dependent photon flux in photons/s
 
-INPUTS: 
-- wavelengths::  wavelength tuple
-- normalized_fluxes:: weighted probabilities for new wavelength vector
-- num_reactions:: number of photons to be simulated at once (usually 1)
+# INPUTS: 
+- `wavelengths::NTuple{N,Int32}` ->  wavelength tuple
+- `normalized_fluxes::NTuple{N,Float32}` -> weighted probabilities for new wavelength vector
+- `num_reactions::Int` -> number of photons to be simulated at once (usually 1)
 
-OUTPUTS:
-- wvl_vector, e_vector
+# OUTPUTS:
+- `wvl_vector` -> vector containing wavelength values in Angstrom
+- `e_vector` -> vector containing photon energies in J
 """
-
 function generate_energy_vector(wavelengths::NTuple{N,Int32}, normalized_fluxes::NTuple{N,Float32}, num_reactions::Int) where {N}
 
     @assert 0 < num_reactions "Number of reactions must be at least 1!"
@@ -136,30 +139,22 @@ end
 
 
 """
-#:: FUNCTION: get_solar_fluxes(parent_type, wavelength_range)
--------------------------------------------------------------------------------------------
+    get_solar_fluxes(parent_type, wavelength_range)
+# -------------------------------------------------------------------------------------------
 
-OBJECTIVE: Get normalized fluxes for a given parent species and ina specific wavelength range
+# OBJECTIVE: Get normalized fluxes for a given parent species and ina specific wavelength range
 
-INPUTS: 
-- wavelength_range::  2D Tuple
-- parent_type:: within exosphid_species
+# INPUTS: 
+- `wavelength_range::NTuple{2, Float64}` ->  2D Tuple
+- `parent_type::String` -> within `exosphid_species`
 
-OUTPUTS:
-- wvl_vector, e_vector
+# OUTPUTS:
+- `wvl_vector` -> vector containing wavelength values in Angstrom
+- `e_vector` -> vector containing photon energies in J
 
-AUXILIARY FUNCTION: assert_not_same_interval(wrange, solar_wavelength)
+# AUXILIARY FUNCTION: assert_not_same_interval(wrange, solar_wavelength)
     -> Checks that upper and lower wavlength bounds are not exactly between 2 consecutive wavleength bins, otherwise the generated arrays would be of size 0.
 """
-
-function assert_not_same_interval(wrange::Tuple{<:Real,<:Real}, solar_wavelength::Tuple)
-    solar_vec = collect(solar_wavelength)
-    idxs = map(w -> searchsortedfirst(solar_vec, w), wrange)
-
-    @assert !(all(i -> 1 < i <= length(solar_vec), idxs) && idxs[1] == idxs[2] && (solar_vec[idxs[1]] != wrange[1] && solar_vec[idxs[2]] != wrange[2]))
-        "Upper and lower wavelength range $wrange lie within 2 consecutive solar_wavelength bins"
-end
-
 function get_solar_fluxes(parent_type::String, wvl_range::NTuple{2, Float64})
 
     @assert wvl_range[2] > wvl_range[1] "Wavelength bounds incorrect"
@@ -181,23 +176,30 @@ function get_solar_fluxes(parent_type::String, wvl_range::Tuple{<:Real,<:Real})
     return get_solar_fluxes(parent_type, Float64.(Tuple(wvl_range)))
 end
 
+function assert_not_same_interval(wrange::Tuple{<:Real,<:Real}, solar_wavelength::Tuple)
+    solar_vec = collect(solar_wavelength)
+    idxs = map(w -> searchsortedfirst(solar_vec, w), wrange)
+
+    @assert !(all(i -> 1 < i <= length(solar_vec), idxs) && idxs[1] == idxs[2] && (solar_vec[idxs[1]] != wrange[1] && solar_vec[idxs[2]] != wrange[2]))
+        "Upper and lower wavelength range $wrange lie within 2 consecutive solar_wavelength bins"
+end
+
 
 """ 
-#:: FUNCTION: flux_outputs(parent_type, wvl_range, solar_activity, num_reactions)
+    flux_outputs(parent_type, wvl_range, solar_activity, num_reactions)
 -------------------------------------------------------------------------------------------
 
-OBJECTIVE: Get photon energy and wavelength for a certain parent species and degree of solar activity
+# OBJECTIVE: Get photon energy and wavelength for a certain parent species and degree of solar activity
 
-INPUTS: 
-- parent_type:: Parent species to be photodissociated/ionized
-- wvl_range::  2D Tuple
-- solar_activity:: decimal degree of solar activity (0.0 -> quiet sun, 1.0 -> active sun, or in between)
-- num_reactions:: number of photons to be simulated at once (usually 1)
+# INPUTS: 
+- `parent_type::String` -> Parent species to be photodissociated/ionized
+- `wvl_range::NTuple{2, Float64}` ->  2D Tuple
+- `solar_activity::Float32` -> decimal degree of solar activity (0.0 -> quiet sun, 1.0 -> active sun, or in between)
+- `num_reactions::Int` -> number of photons to be simulated at once (usually 1)
 
-OUTPUTS:
+# OUTPUTS:
 - Final wavelength and energy vector / value
 """
-
 function flux_outputs(parent_type::String, wvl_range::NTuple{2, Float64}, solar_activity::Float32, num_reactions::Int)
 
     @assert 0.0 <= solar_activity <= 1.0 "Solar activity must be in (0,1)!"
@@ -222,5 +224,4 @@ end
 
 
 export flux_outputs
-export normalize_flux_distribution
 export get_solar_fluxes
