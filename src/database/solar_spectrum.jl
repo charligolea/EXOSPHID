@@ -84,6 +84,12 @@ function exclude_lyman_alpha(filtered_wavelengths::Vector{Integer},
     return filtered_wavelengths[exclude_indices], filtered_fluxes[exclude_indices]
 end
 
+function exclude_lyman_alpha(filtered_wavelengths::AbstractVector{<:Integer}, 
+                             filtered_fluxes::AbstractVector{<:AbstractFloat})
+    return exclude_lyman_alpha(Vector{Integer}(filtered_wavelengths),
+                               Vector{Float32}(filtered_fluxes))
+end
+
 
 """
     generate_weighted_random_wvl(wavelengths, normalized_fluxes)
