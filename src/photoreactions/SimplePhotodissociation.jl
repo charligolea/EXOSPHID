@@ -108,7 +108,7 @@ function allocate_velocity_dissociation(reaction::PhotoReaction,
     v_light_mag = Δ ≥ 0 ? (-b + sqrt(Δ)) / (2 * a) : 0
     v_light_tuple = v_light_mag .* u_light
 
-    v_heavy_tuple = (total_momentum .- m_light.*v_light_tuple) ./ m_heavy
+    v_heavy_tuple = (total_momentum .- m_light.* v_light_tuple) ./ m_heavy
 
     return Float32.(v_light_tuple), Float32.(v_heavy_tuple)
 end
