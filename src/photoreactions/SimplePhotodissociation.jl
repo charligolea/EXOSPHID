@@ -188,8 +188,8 @@ function multiple_photodissociation(reaction::PhotoReaction,
             *""* reaction.product_names[2] *""* " + " *""* reaction.product_names[3])
     end
 
-    final_speeds_light = []
-    final_speeds_heavy = []
+    final_speeds_light = NTuple{3, Float32}[]
+    final_speeds_heavy = NTuple{3, Float32}[]
 
     # 1. Loop over photon energy vector
     for photon_energy in photon_energy_vector
@@ -229,8 +229,9 @@ end
 - For the multiple photodssociation case, show statistics of mean, median and STD speeds
 - Only if display_info is set true
 """
-function show_info_dissociation(reaction::PhotoReaction, final_speeds_heavy::Vector{Any}, 
-                            final_speeds_light::Vector{Any})
+function show_info_dissociation(reaction::PhotoReaction, 
+                            final_speeds_heavy::Vector{Tuple{Float32, Float32, Float32}}, 
+                            final_speeds_light::Vector{Tuple{Float32, Float32, Float32}})
     final_speeds_heavy_norms = norm.(final_speeds_heavy)
     final_speeds_light_norms = norm.(final_speeds_light)
 

@@ -137,7 +137,7 @@ function multiple_photoionisation(reaction::PhotoReaction,
             *""* reaction.product_names[2] *" + e-")
     end
 
-    final_speeds_ion = []
+    final_speeds_ion = NTuple{3, Float32}[]
 
     # 1. Loop over photon energy vector
     for photon_energy in photon_energy_vector
@@ -177,7 +177,8 @@ end
 - For the multiple ionisation case, show statistics of mean, median and STD speeds
 - Only if `display_info` is set true
 """
-function show_info_ionisation(reaction::PhotoReaction, final_speeds_ion::Vector{Any})
+function show_info_ionisation(reaction::PhotoReaction, 
+                            final_speeds_ion::Vector{Tuple{Float32, Float32, Float32}})
     final_speeds_ion_norm = norm.(final_speeds_ion)
 
     data_speeds = DataFrame(
