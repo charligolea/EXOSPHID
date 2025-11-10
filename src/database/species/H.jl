@@ -63,7 +63,7 @@ const wv_H = ((0f0, 911.75f0),)
 H = Species(
     wvl_thr_H,
     qr_H,
-    qr_H,
+    ar_H,
     tsh_H,
     sn_H,
     rp_H,
