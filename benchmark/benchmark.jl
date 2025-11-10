@@ -10,12 +10,17 @@ end
     const velocities
 
 - Sample values of parent velocities for the different EXOSPHID species.
-- Determined from thermal velocity distributions for an assumed temperature of 250 K (average for the Moon)
+- Determined from thermal velocity distributions for an assumed temperature of 250 K 
+    (average for the Moon)
 """
-const velocities = Dict("H2O" => 590, "OH" => 605, "H2" => 1750, "H" => 2500, "H(-)"=> 2500, "HO2" => 425, "H2O2" => 435, "He" => 1250, "Ne" => 560)
+const velocities = Dict("H2O" => 590, "OH" => 605, "H2" => 1750, "H" => 2500, 
+                        "H(-)"=> 2500, "HO2" => 425, "H2O2" => 435, 
+                        "He" => 1250, "Ne" => 560)
+
 
 """
     photobenchmark(dt, solar_activity, parent_name)
+-------------------------------------------------------------------------------------------
 
 # OBJECTIVE:
 - Evaluate computational performance of EXOSPHID
@@ -23,14 +28,16 @@ const velocities = Dict("H2O" => 590, "OH" => 605, "H2" => 1750, "H" => 2500, "H
 # INPUTS:
 - `dt::Float32` -> Time Window in seconds
 - `solar_activity::Float32` -> From 0 (Quiet Sun) to 1 (Active Sun)
-- `parent_name::String` -> String with parent molecule type. See exosphid_species variable in photodatabase.jl for possible species
+- `parent_name::String` -> String with parent molecule type. See exosphid_species variable 
+    in photodatabase.jl for possible species
 """
 function photobenchmark(dt::Float32, solar_activity::Float32, parent_name::String)
 
     print("\nStarting Numerical Benchmark for $(parent_name)\n")
     parent_velocity =  velocities[parent_name]
 
-    bm = @benchmark photodestruction($solar_activity, $dt, $parent_name, $parent_velocity, nothing)
+    bm = @benchmark 
+        photodestruction($solar_activity, $dt, $parent_name, $parent_velocity, nothing)
     display(bm)
 
     print("\nNumerical Benchmark completed for $(parent_name)\n")
@@ -44,13 +51,15 @@ end
 
 """
     allocations(dt, solar_activity, parent_name)
+-------------------------------------------------------------------------------------------
 
 # OBJECTIVE: Evaluate allocations in detail
 
 # INPUTS:
 - `dt::Float32` -> Time Window in seconds
 - `solar_activity::Float32` -> From 0 (Quiet Sun) to 1 (Active Sun)
-- `parent_name::String` -> String with parent molecule type. See exosphid_species variable in photodatabase.jl for possible species
+- `parent_name::String` -> String with parent molecule type. See exosphid_species variable 
+    in photodatabase.jl for possible species
 """
 function allocations(dt::Float32, solar_activity::Float32, parent_name::String)
 
