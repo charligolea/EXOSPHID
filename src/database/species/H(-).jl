@@ -74,7 +74,7 @@ const wv_H_ = ((847.36f0, 16439.0f0), #Lykke et al 1992 and  Huebner 2015
 H_ = Species(
     wvl_thr_H_,
     qr_H_,
-    qr_H_,
+    ar_H_,
     tsh_H_,
     sn_H_,
     rp_H_,

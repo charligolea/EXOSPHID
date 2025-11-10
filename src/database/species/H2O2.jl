@@ -63,7 +63,7 @@ const wv_H2O2 = ((0f0, 5765.0f0),)
 H2O2 = Species(
     wvl_thr_H2O2,
     qr_H2O2,
-    qr_H2O2,
+    ar_H2O2,
     tsh_H2O2,
     sn_H2O2,
     rp_H2O2,

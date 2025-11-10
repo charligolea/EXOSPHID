@@ -64,7 +64,7 @@ const wv_HO2 = ((0f0, 4395.0f0),)
 HO2 = Species(
     wvl_thr_HO2,
     qr_HO2,
-    qr_HO2,
+    ar_HO2,
     tsh_HO2,
     sn_HO2,
     rp_HO2,

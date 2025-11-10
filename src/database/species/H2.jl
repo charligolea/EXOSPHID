@@ -89,7 +89,7 @@ const wv_H2 = ((844.8f0, 2768.0f0), (803.7f0, 844.8f0), (695.8f0, 803.7f0), (0f0
 H2 = Species(
     wvl_thr_H2,
     qr_H2,
-    qr_H2,
+    ar_H2,
     tsh_H2,
     sn_H2,
     rp_H2,

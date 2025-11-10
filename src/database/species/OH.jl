@@ -106,7 +106,7 @@ const wv_OH = ((2439.0f0,2460.0f0), (2150.0f0,2170.0f0), (1400.0f0, 1800.0f0),
 OH = Species(
     wvl_thr_OH,
     qr_OH,
-    qr_OH,
+    ar_OH,
     tsh_OH,
     sn_OH,
     rp_OH,

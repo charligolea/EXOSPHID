@@ -65,7 +65,7 @@ const wv_Ne = ((0f0, 574.94f0),)
 Ne = Species(
     wvl_thr_Ne,
     qr_Ne,
-    qr_Ne,
+    ar_Ne,
     tsh_Ne,
     sn_Ne,
     rp_Ne,

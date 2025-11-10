@@ -64,7 +64,7 @@ const wv_He = ((0f0, 504.27f0),)
 He = Species(
     wvl_thr_He,
     qr_He,
-    qr_He,
+    ar_He,
     tsh_He,
     sn_He,
     rp_He,
