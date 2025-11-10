@@ -1,8 +1,8 @@
 module EXOSPHID
 
-# ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+# ─────────────────────────────────────────────────────────────────────────────────────────
 # LOAD PACKAGES
-# ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+# ─────────────────────────────────────────────────────────────────────────────────────────
 
 using Random
 using LinearAlgebra
@@ -11,9 +11,9 @@ using Statistics
 using DataFrames
 
 
-# ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+# ─────────────────────────────────────────────────────────────────────────────────────────
 # LOAD SOURCES
-# ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+# ─────────────────────────────────────────────────────────────────────────────────────────
 
 include(joinpath(@__DIR__, "main", "photodestruction_main.jl"))
 include(joinpath(@__DIR__, "database", "species", "general_construct.jl"))
@@ -38,11 +38,13 @@ include(joinpath(@__DIR__, "..", "validation", "validation.jl"))
 
 ## EXOSpheric PhotoIonisation & PhotoDissociation
 
-Scientific code library for simulating photochemical loss pathways in exosphere environments of airless
-bodies in the solar system. Note that the package is under development and subject to
-frequent changes. For questions, please contact the C. Gómez de Olea B. via email.
+Scientific code library for simulating photochemical loss pathways in exosphere 
+    environments of airless bodies in the solar system. Note that the package is 
+    under development and subject to frequent changes. For questions, please contact 
+    the developper C. Gómez de Olea B. via email.
 
-The documentation and manual can be found in the [GitHub wiki](https://github.com/charligolea/EXOSPHID/wiki).
+The documentation and manual can be found in the 
+    [GitHub wiki](https://github.com/charligolea/EXOSPHID/wiki).
 
 _Author: C. Gómez de Olea Ballester (carloas.olea@tum.de)_
 
