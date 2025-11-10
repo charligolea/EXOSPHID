@@ -120,7 +120,7 @@ println("TESTING photodatabase.jl ...............")
                     qf, af = get_normalized_fluxes(parent_type)
 
                     if photo_info.quiet_rate != photo_info.active_rate
-                        @test any(!isapprox.(qf, af; rtol=1e-12))
+                        @test any(.!isapprox.(qf, af; rtol=1e-12))
                     elseif photo_info.quiet_rate == photo_info.active_rate
                         all(isapprox.(qf, af; rtol=1e-12))
                     end
@@ -130,7 +130,7 @@ println("TESTING photodatabase.jl ...............")
                     qf, af = get_standard_fluxes(parent_type)
 
                     if photo_info.quiet_rate != photo_info.active_rate
-                        @test any(!isapprox.(qf, af; rtol=1e-12))
+                        @test any(.!isapprox.(qf, af; rtol=1e-12))
                     elseif photo_info.quiet_rate == photo_info.active_rate
                         all(isapprox.(qf, af; rtol=1e-12))
                     end
@@ -158,15 +158,15 @@ end
             
                 p_wvl = photo_info.wvl_threshold * (1.f0+rand(Float32)) # Photon wavelength higher than threshold
                 @testset verbose=true "No reaction if wvl > threshold" begin
-                    @test get_current_reaction(p_wvl, photo_info) == (nothing, nothing, nothing, nothing)
+                    @test get_current_reaction(p_wvl, photo_info) == ("", "", Integer[], ())
                 end
 
                 p_wvl = rand() * photo_info.wvl_threshold # Photon wavelength lower than threshold
                 @testset verbose=true "Yes reaction if wvl < threshold AND in relevant wvl_range" begin
                     if any(r -> r[1] <= p_wvl <= r[2], photo_info.wavelength_range)
-                        @test get_current_reaction(p_wvl, photo_info) != (nothing, nothing, nothing, nothing)
+                        @test get_current_reaction(p_wvl, photo_info) != ("", "", Integer[], ())
                     else
-                        @test get_current_reaction(p_wvl, photo_info) == (nothing, nothing, nothing, nothing)
+                        @test get_current_reaction(p_wvl, photo_info) == ("", "", Integer[], ())
                     end
                 end
             end
