@@ -70,7 +70,7 @@ function photodestruction(
                     product_velocities, product_types = call_photodestruction_logic(
                         current_reaction, photochemical_info, parent_velocity, sun_tuple, 
                         photon_energy)
-                    return reaction_occurence, current_reaction.reaction_name, product_types, \
+                    return reaction_occurence, current_reaction.reaction_name, product_types,
                         product_velocities, current_reaction.wvl_range
                 else 
                     return false, "", String[], Tuple{Float32}[], ()
