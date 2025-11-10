@@ -1,28 +1,35 @@
-# ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+# ─────────────────────────────────────────────────────────────────────────────────────────
 # Main Struct for Ionisation and Dissociation Reactions
-# ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+# ─────────────────────────────────────────────────────────────────────────────────────────
 
 """
-    STRUCT PhotoReaction()
+    PhotoReaction()
 
-- `E_bond::Float32` -> Threshold energy for given photodissociation or photoionisation reaction in J -> USER INPUT
-- `v_parent::NTuple{3, Float32}` -> Velocity of the parent molecule in m/s (H2O, OH, H2) -> USER INPUT
+- `E_bond::Float32` -> Threshold energy for given photodissociation or photoionisation 
+    reaction in J -> USER INPUT
+- `v_parent::NTuple{3, Float32}` -> Velocity of the parent molecule in m/s (H2O, OH, H2)
 - `sun_tuple::NTuple{3, Float32}` -> Solar vector === direction of incoming photons
-- `product_names::NTuple{3, String}` -> USER INPUT -> Dict containing all involved species names. Must contain 3 keys: "parent_name", "heavy_child_name", "light_child_name""
-- `product_types::NTuple{3, String}` -> Extracts elements in parenthesis, duch as electronic states, from product names (e.g. OH(X^2Pi) -> OH)
-- `display_info::Bool` -> Set true if you want to print photoproduct velocity analysis at the end
+- `product_names::NTuple{3, String}` -> USER INPUT -> Dict containing all involved species 
+    names. Must contain 3 keys: "parent_name", "heavy_child_name", "light_child_name""
+- `product_types::NTuple{3, String}` -> Extracts elements in parenthesis, duch as electronic 
+    states, from product names (e.g. OH(X^2Pi) -> OH)
+- `display_info::Bool` -> Set true if you want to print photoproduct velocity analysis
 """
 struct PhotoReaction
-    E_bond::Float32 # Threshold energy for given photodissociation or photoionisation reaction in J -> USER INPUT
-    v_parent::NTuple{3, Float32} # Velocity of the parent molecule in m/s (H2O, OH, H2) -> USER INPUT
-    sun_tuple::NTuple{3, Float32} # Solar vector === direction of incoming photons
-    product_names::NTuple{3, String} # USER INPUT -> Dict containing all involved species names. Must contain 3 keys: "parent_name", "heavy_child_name", "light_child_name""
-    product_types::NTuple{3, String} # Extracts elements in parenthesis, duch as electronic states, from product names (e.g. OH(X^2Pi) -> OH)
-    display_info::Bool # Set true if you want to print photoproduct velocity analysis at the end
+    E_bond::Float32
+    v_parent::NTuple{3, Float32}
+    sun_tuple::NTuple{3, Float32}
+    product_names::NTuple{3, String}
+    product_types::NTuple{3, String}
+    display_info::Bool
 
-    function PhotoReaction(E_bond::Real, v_parent::NTuple{3, Float32}, sun_tuple::NTuple{3, Float32}, product_names::NTuple{3, String}, display_info::Bool)
+    function PhotoReaction(E_bond::Real, v_parent::NTuple{3, Float32}, 
+            sun_tuple::NTuple{3, Float32}, product_names::NTuple{3, String}, 
+            display_info::Bool)
         product_types = map(s -> replace(s, r"\(.*\)" => ""),product_names)
-        new(Float32(E_bond), Float32.(v_parent), Float32.(sun_tuple), product_names, product_types, display_info)
+        new(Float32(E_bond), Float32.(v_parent), 
+            Float32.(sun_tuple), product_names, product_types, 
+            display_info)
     end
 
     function PhotoReaction(E_bond::Real, v_parent::Real, sun_tuple::NTuple{3, Real}, product_names::NTuple{3, String}, display_info::Bool)
@@ -76,4 +83,6 @@ end
 # Output:
 - Momentum vector for the photon in kg*m/s
 """
-calculate_photon_momentum(E_photon::Real, sun_tuple::NTuple{3, Float32}) = (E_photon/c) .* sun_tuple
+function calculate_photon_momentum(E_photon::Real, sun_tuple::NTuple{3, Float32})
+    return (E_photon/c) .* sun_tuple
+end
