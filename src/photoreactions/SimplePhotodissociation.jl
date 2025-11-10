@@ -1,34 +1,54 @@
-# ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+# ─────────────────────────────────────────────────────────────────────────────────────────
 # FUNCTIONS
-# ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+# ─────────────────────────────────────────────────────────────────────────────────────────
 
 """ 
-    calculate_excess_energy_dissociation(reaction, m_parent, E_photon)
+    calculate_excess_energy_dissociation(reaction, m_parent, photon_energy)
 -------------------------------------------------------------------------------------------
 
 # Arguments 
 - `reaction::PhotoReaction`
 - `m_parent:: Float64` -> mass of parent species in kg
-- `E_photon::Real` -> in J
+- `photon_energy::Real` -> in J
 
 # OBJECTIVE: 
-- Calculate excess energy taking into consideration vibrorotational energies of parents and products.
-- OH is a special case, as it is predissociated by the photon. To understand the theory behind predissociation and simulation chocies for EXOSPHID, refer to WIKI
+- Calculate excess energy taking into consideration vibrorotational energies of parents and 
+    products.
+- OH is a special case, as it is predissociated by the photon. To understand the theory 
+    behind predissociation and simulation chocies for EXOSPHID, refer to WIKI
 
 # Output: 
 - Excess energy in J
 """
-function calculate_excess_energy_dissociation(reaction::PhotoReaction, m_parent::Float64, E_photon::Real)
+function calculate_excess_energy_dissociation(reaction::PhotoReaction, m_parent::Float64, 
+                                            photon_energy::Real)
 
+    # PREDISSOCIATION
     if reaction.product_types[1] == "OH" && reaction.product_names[1] != "OH(DPD)"
         E_parent = 0.5f0 * m_parent * norm(reaction.v_parent)^2
-        E_excess = (E_parent + E_photon - get_electronic_energy_predis(reaction.product_names[1]) - get_vibrorotational_energy(reaction.product_names[1]))
+        E_excess = 
+            E_parent + 
+            photon_energy - 
+            get_electronic_energy_predis(reaction.product_names[1]) - 
+            get_vibrorotational_energy(reaction.product_names[1])
+
+    # DOUBLE DISSOCIATION
     elseif occursin("(DPD)", reaction.product_names[1])
         E_parent = 0.5f0 * m_parent * norm(reaction.v_parent)^2
-        E_excess = (E_photon + E_parent) - reaction.E_bond
+        E_excess = (photon_energy + E_parent) - reaction.E_bond
+
+    # STANDARD CASE
     else
-        E_parent = 0.5f0 * m_parent * norm(reaction.v_parent)^2 + get_vibrorotational_energy(reaction.product_names[1])
-        E_excess = (E_photon + E_parent) - reaction.E_bond - (get_vibrorotational_energy(reaction.product_names[2]) + get_vibrorotational_energy(reaction.product_names[3]))
+        E_parent = 
+            0.5f0 * m_parent * norm(reaction.v_parent)^2 + 
+            get_vibrorotational_energy(reaction.product_names[1])
+        E_excess = 
+            photon_energy + 
+            E_parent - 
+            reaction.E_bond -
+            get_vibrorotational_energy(reaction.product_names[2]) - 
+            get_vibrorotational_energy(reaction.product_names[3])
+
     end
 
     return E_excess
@@ -42,18 +62,27 @@ end
 # Arguments
 - `reaction::PhotoReaction`
 - `E_excess::Real` -> in J
-- `species_masses::NTuple{3, Float64}` -> 3D Tuple containing: [1]: parent mass, [2]: heavy product mass, [3]: light product mass
+- `species_masses::NTuple{3, Float64}` -> 3D Tuple containing: 
+    * [1]: parent mass
+    * [2]: heavy product mass
+    * [3]: light product mass
 - `p_photon::NTuple{3, Real}` -> 3D Tuple in kg*m/s
 
 # OBJECTIVE: 
-- Calculate velocities for the photodissociation products according to the moment and energy conservation equations
+- Calculate velocities for the photodissociation products according to the moment and 
+    energy conservation equations
 - The derivations of the quadratic equation can be consulted in the EXOSPHID WIKI
 
 # Output:
-- `v_heavy_tuple`: 3D Tuple containing velocity components for the heavier photolysis product (e.g., for H2O -> OH + H, it would be OH)
-- `v_light_tuple`: 3D Tuple containing velocity components for the lighter photolysis product (e.g., for H2O -> OH + H, it would be H)
+- `v_heavy_tuple`: 3D Tuple containing velocity components for the heavier photolysis product 
+    (e.g., for H2O -> OH + H, it would be OH)
+- `v_light_tuple`: 3D Tuple containing velocity components for the lighter photolysis product 
+    (e.g., for H2O -> OH + H, it would be H)
 """
-function allocate_velocity_dissociation(reaction::PhotoReaction, E_excess::Real, species_masses::NTuple{3, Float64}, p_photon::NTuple{3, Real})
+function allocate_velocity_dissociation(reaction::PhotoReaction, 
+                                    E_excess::Real, 
+                                    species_masses::NTuple{3, Float64}, 
+                                    p_photon::NTuple{3, Real})
 
     # 1. Get unitary vector for photon
     u_ph = reaction.sun_tuple
@@ -69,9 +98,11 @@ function allocate_velocity_dissociation(reaction::PhotoReaction, E_excess::Real,
     u_heavy = random_unit_tuple()
 
     # 5. Calculate speed values for light and heavy products
-    a = m_light * (m_heavy * (dot(u_heavy,u_ph)))^2 + (m_light^2 * m_heavy)*(dot(u_light, u_ph)^2)
+    a = m_light * (m_heavy * (dot(u_heavy,u_ph)))^2 + 
+        (m_light^2 * m_heavy)*(dot(u_light, u_ph)^2)
     b = -2 * (dot(u_light, u_ph) * m_light * m_heavy) * (dot(total_momentum,u_ph))
-    c = m_heavy * dot(total_momentum,u_ph)^2 - 2 * E_excess * (m_heavy * (dot(u_heavy,u_ph)))^2
+    c = m_heavy * dot(total_momentum,u_ph)^2 - 
+        2 * E_excess * (m_heavy * (dot(u_heavy,u_ph)))^2
 
     Δ = b^2 - 4 * a * c
     v_light_mag = Δ ≥ 0 ? (-b + sqrt(Δ)) / (2 * a) : 0
@@ -84,73 +115,88 @@ end
 
 
 """
-    simulate_photodissociation(reaction, E_photon)
+    simulate_photodissociation(reaction, photon_energy)
 -------------------------------------------------------------------------------------------
 
 # Arguments
 - `reaction::PhotoReaction` object
-- `E_photon::Float32` -> in J
+- `photon_energy::Float32` -> in J
 
 # OBJECTIVE: 
-- Simulate a single photodissociation reaction that has previously been determined from the database
+- Simulate a single photodissociation reaction that has previously been determined from the 
+    database
 
 # Output: Outputs from `allocate_velocity()`
-- `v_heavy_tuple`: 3D Tuple containing velocity components for the heavier photolysis product (e.g., for H2O -> OH + H, it would be OH)
-- `v_light_tuple`: 3D Tuple containing velocity components for the lighter photolysis product (e.g., for H2O -> OH + H, it would be H)
+- `v_heavy_tuple`: 3D Tuple containing velocity components for the heavier photolysis product 
+    (e.g., for H2O -> OH + H, it would be OH)
+- `v_light_tuple`: 3D Tuple containing velocity components for the lighter photolysis product 
+    (e.g., for H2O -> OH + H, it would be H)
 """
-function simulate_photodissociation(reaction::PhotoReaction, E_photon::Float32)
+function simulate_photodissociation(reaction::PhotoReaction, photon_energy::Float32)
 
     # 1. Calculate photon linear momentum magnitude (kg*m/s)
-    p_photon = calculate_photon_momentum(E_photon, reaction.sun_tuple)
+    p_photon = calculate_photon_momentum(photon_energy, reaction.sun_tuple)
 
     # 2. Get masses for all the species involved
-    species_masses = get_masses(reaction.product_types[1]; heavy_child_name= reaction.product_types[2], light_child_name = reaction.product_types[3], mode="PD")
+    species_masses = get_masses(reaction.product_types[1]; 
+                            heavy_child_name= reaction.product_types[2], 
+                            light_child_name = reaction.product_types[3], mode="PD")
 
     # 3. Calculate excess energy (J)
-    E_excess = calculate_excess_energy_dissociation(reaction::PhotoReaction, species_masses[1], E_photon)
+    E_excess = calculate_excess_energy_dissociation(reaction::PhotoReaction, 
+                                                species_masses[1], photon_energy)
 
     # 4. Calculate velocity of heavy and light photoreaction product
-    v_light_tuple, v_heavy_tuple = allocate_velocity_dissociation(reaction, E_excess, species_masses, p_photon)
+    v_light_tuple, v_heavy_tuple = 
+        allocate_velocity_dissociation(reaction, E_excess, species_masses, p_photon)
 
     return v_light_tuple, v_heavy_tuple
 end
 
-function simulate_photodissociation(reaction::PhotoReaction, E_photon::Real)
-    return simulate_photodissociation(reaction, Float32(E_photon))
+function simulate_photodissociation(reaction::PhotoReaction, photon_energy::Real)
+    return simulate_photodissociation(reaction, Float32(photon_energy))
 end
 
 
 """
-    multiple_photodissociation(reaction, energy_vector)
+    multiple_photodissociation(reaction, photon_energy_vector)
 -------------------------------------------------------------------------------------------
 
 # Arguments
 - `reaction::PhotoReaction` object
-- `energy_vector::Vector{Float32}` -> contains N scalar values of photon energy in J in the wavelength range of choice
+- `photon_energy_vector::Vector{Float32}` -> contains N scalar values of photon energy in J 
+    in the wavelength range of choice
 
 # OBJECTIVE: 
 - Function to simulate multiple photodissociation reactions
-- Particularly interesting for validation studies ehere we want to generate multiple photons at the same time for a specific parent 
+- Particularly interesting for validation studies ehere we want to generate multiple photons 
+    at the same time for a specific parent 
 AND wavelength range  AND reaction type and compare to literature values
 
 # Output: Outputs from `allocate_velocity()`
-- `final_speeds_light`: Array of Size N. Every element is a 3D Tuple containing velocity components for the heavier photolysis product (e.g., for H2O -> OH + H, it would be OH)
-- `final_speeds_heavy`: Array of Size N. Every element is a 3D Tuple containing velocity components for the lighter photolysis product (e.g., for H2O -> OH + H, it would be H)
+- `final_speeds_light`: Array of Size N. Every element is a 3D Tuple containing velocity 
+    components for the heavier photolysis product (e.g., for H2O -> OH + H, it would be OH)
+- `final_speeds_heavy`: Array of Size N. Every element is a 3D Tuple containing velocity 
+    components for the lighter photolysis product (e.g., for H2O -> OH + H, it would be H)
 """
-function multiple_photodissociation(reaction::PhotoReaction, energy_vector::Vector{Float32})
+function multiple_photodissociation(reaction::PhotoReaction, 
+                                photon_energy_vector::Vector{Float32})
 
     if reaction.display_info
-        println("Simulating photodissociation reaction: " *""* reaction.product_names[1] *""* " + γ - > " *""* reaction.product_names[2] *""* " + " *""* reaction.product_names[3])
+        println("Simulating photodissociation reaction: " 
+            *""* reaction.product_names[1] *""* " + γ - > " 
+            *""* reaction.product_names[2] *""* " + " *""* reaction.product_names[3])
     end
 
     final_speeds_light = []
     final_speeds_heavy = []
 
     # 1. Loop over photon energy vector
-    for E_photon in energy_vector
-        if E_photon > reaction.E_bond
+    for photon_energy in photon_energy_vector
+        if photon_energy > reaction.E_bond
             # 1.1. Simulate individual photoreaction for every incoming photon
-            v_light_tuple, v_heavy_tuple = simulate_photodissociation(reaction, E_photon)
+            v_light_tuple, v_heavy_tuple = 
+                simulate_photodissociation(reaction, photon_energy)
             push!(final_speeds_light, v_light_tuple./1000)
             push!(final_speeds_heavy, v_heavy_tuple./1000)
         end
@@ -164,8 +210,9 @@ function multiple_photodissociation(reaction::PhotoReaction, energy_vector::Vect
     return final_speeds_light, final_speeds_heavy
 end
 
-function multiple_photodissociation(reaction::PhotoReaction, energy_vector::AbstractVector{<:Real})
-    return multiple_photodissociation(reaction, Float32.(collect(energy_vector)))
+function multiple_photodissociation(reaction::PhotoReaction, 
+                                photon_energy_vector::AbstractVector{<:Real})
+    return multiple_photodissociation(reaction, Float32.(collect(photon_energy_vector)))
 end
 
 
@@ -175,15 +222,17 @@ end
 
 # Arguments
 - `reaction::PhotoReaction` object
-- `final_speeds_heavy::Vector{Any}, final_speeds_light::Vector{Any}` -> outputs from `multiple_photodissociation`
+- `final_speeds_heavy::Vector{Any}, final_speeds_light::Vector{Any}` -> outputs from 
+    `multiple_photodissociation`
 
 # OBJECTIVE: 
 - For the multiple photodssociation case, show statistics of mean, median and STD speeds
 - Only if display_info is set true
 """
-function show_info_dissociation(reaction::PhotoReaction, final_speeds_heavy::Vector{Any}, final_speeds_light::Vector{Any})
-    final_speeds_heavy_norms = [norm(p) for p in final_speeds_heavy]
-    final_speeds_light_norms = [norm(p) for p in final_speeds_light]
+function show_info_dissociation(reaction::PhotoReaction, final_speeds_heavy::Vector{Any}, 
+                            final_speeds_light::Vector{Any})
+    final_speeds_heavy_norms = norm.(final_speeds_heavy)
+    final_speeds_light_norms = norm.(final_speeds_light)
 
     data_speeds = DataFrame(
     Product = [reaction.product_names[2], reaction.product_names[3]],
@@ -195,9 +244,9 @@ function show_info_dissociation(reaction::PhotoReaction, final_speeds_heavy::Vec
 end
 
 
-# ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+# ─────────────────────────────────────────────────────────────────────────────────────────
 # EXPORTS
-# ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+# ─────────────────────────────────────────────────────────────────────────────────────────
 
 export simulate_photodissociation
 export multiple_photodissociation
