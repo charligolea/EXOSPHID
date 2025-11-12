@@ -36,8 +36,8 @@ function photobenchmark(dt::Float32, solar_activity::Float32, parent_name::Strin
     print("\nStarting Numerical Benchmark for $(parent_name)\n")
     parent_velocity =  velocities[parent_name]
 
-    bm = @benchmark 
-        photodestruction($solar_activity, $dt, $parent_name, $parent_velocity, nothing)
+    bm = @benchmark photodestruction($solar_activity, $dt, $parent_name, 
+                                    $parent_velocity, nothing)
     display(bm)
 
     print("\nNumerical Benchmark completed for $(parent_name)\n")
