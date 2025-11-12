@@ -78,20 +78,28 @@ function DPD_logic(photon_energy::Float32, snames::NTuple{2, NTuple{3, String}},
                 tsh_energy::NTuple{2, Float32}, parent_velocity::NTuple{3, Float32}, 
                 sun_tuple::NTuple{3, Float32})
     
+    # Get product names with no electronic states
     product_names = (map(s -> replace(s, r"\((?!\+).*?\)" => ""), snames[1]), 
                     map(s -> replace(s, r"\((?!\+).*?\)" => ""), snames[2]))
 
+    # First Dissociation reaction
+    # final_speeds_heavy_1: Speed of the heavy daughter species from first dissociation (OH)
+    # final_speeds_light_1: Speed of the light daughter species from first dissociation (H)
     reaction = PhotoReaction(eV2J(tsh_energy[1]), parent_velocity, sun_tuple, snames[1], false)
-    final_speeds_light_1, final_speeds_heavy_old = 
+    final_speeds_light_1, final_speeds_heavy_1 = 
         simulate_photodissociation(reaction, photon_energy)
 
-    reaction = PhotoReaction(eV2J(tsh_energy[2]), map(Float32, final_speeds_heavy_old), 
+    # Second Dissociation Reaction
+    # final_speeds_heavy_2: Speed of the heavy daughter species from first dissociation (O)
+    # final_speeds_light_2: Speed of the light daughter species from first dissociation (H)
+    reaction = PhotoReaction(eV2J(tsh_energy[2]), map(Float32, final_speeds_heavy_1), 
                             sun_tuple, snames[2], false)
-    final_speeds_light_2, final_speeds_heavy = 
+    final_speeds_light_2, final_speeds_heavy_2 = 
         simulate_photodissociation(reaction, photon_energy)
     
+    # Return outputs
     product_types = [product_names[2][2], product_names[1][3], product_names[2][3]]
-    product_velocities = [final_speeds_heavy, final_speeds_light_1, final_speeds_light_2]
+    product_velocities = [final_speeds_heavy_2, final_speeds_light_1, final_speeds_light_2]
 
     return product_velocities, product_types
 end
@@ -166,10 +174,13 @@ end
 function DPI_logic(photon_energy::Float32, snames::NTuple{2, NTuple{3, String}}, 
                 tsh_energy::NTuple{2, Float32}, parent_velocity::NTuple{3, Float32}, 
                 sun_tuple::NTuple{3, Float32})
+    
+    # First Ionisation reaction
     reaction = 
         PhotoReaction(eV2J(tsh_energy[1]), parent_velocity, sun_tuple, snames[1], false)
     final_speeds_ion = simulate_photoionisation(reaction, photon_energy)
 
+    # Second Ionisation reaction
     reaction = PhotoReaction(eV2J(tsh_energy[2]), map(Float32, final_speeds_ion), sun_tuple, 
                             snames[2], false)
     product_velocities = [simulate_photoionisation(reaction, photon_energy)]
@@ -218,12 +229,15 @@ end
 function DiPI_logic(photon_energy::Float32, snames::NTuple{2, NTuple{3, String}}, 
                 tsh_energy::NTuple{2, Float32}, parent_velocity::NTuple{3, Float32}, 
                 sun_tuple::NTuple{3, Float32})
+    
+    # First Ionisation reaction
     reaction = 
         PhotoReaction(eV2J(tsh_energy[1]), parent_velocity, sun_tuple, snames[1], false)
     final_speeds_ion = simulate_photoionisation(reaction, photon_energy)
 
     product_names = map(s -> replace(s, r"\(\+\)" => ""), snames[2])
     
+    # Dissociation reaction
     reaction = PhotoReaction(eV2J(tsh_energy[2]), map(Float32, final_speeds_ion), 
                             sun_tuple, product_names, false)
     final_speeds_light, final_speeds_heavy = 

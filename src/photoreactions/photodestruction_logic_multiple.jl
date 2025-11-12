@@ -75,34 +75,29 @@ function DPD_logic_multiple(photon_energy_vector::Vector{Float32},
                         snames::NTuple{2, NTuple{3, String}}, 
                         tsh_energy::NTuple{2, Float32}, parent_velocity::Real, sun_tuple)
     
+    # First Dissociation reaction
+    # final_speeds_heavy_1: Speed of the heavy daughter species from first dissociation (OH)
+    # final_speeds_light_1: Speed of the light daughter species from first dissociation (H)
     reaction = 
         PhotoReaction(eV2J(tsh_energy[1]), parent_velocity, sun_tuple, snames[1], false)
-    final_speeds_light_1, final_speeds_heavy_old = 
+    final_speeds_light_1, final_speeds_heavy_1 = 
         multiple_photodissociation(reaction, photon_energy_vector)
 
-    reaction = PhotoReaction(eV2J(tsh_energy[2]), 
-                            mean(norm.(final_speeds_heavy_old)), sun_tuple, 
-                            snames[2], false)
-    final_speeds_light_2, final_speeds_heavy = 
+    # Second Dissociation Reaction
+    # final_speeds_heavy_2: Speed of the heavy daughter species from first dissociation (O)
+    # final_speeds_light_2: Speed of the light daughter species from first dissociation (H)
+    reaction = PhotoReaction(eV2J(tsh_energy[2]), mean(norm.(final_speeds_heavy_1)), 
+                            sun_tuple, snames[2], true)
+    final_speeds_light_2, final_speeds_heavy_2 = 
         multiple_photodissociation(reaction, photon_energy_vector)
 
-    final_speeds_light_2_norms = norm.(final_speeds_light_2)
-    final_speeds_heavy_norms = norm.(final_speeds_heavy_old)
-
+    # Get product names with no electronic states
     product_names = (map(s -> replace(s, r"\((?!\+).*?\)" => ""), snames[1]), 
                     map(s -> replace(s, r"\((?!\+).*?\)" => ""), snames[2]))
-
-    data_speeds = DataFrame(
-    Product = [product_names[2][2], product_names[2][3]],
-    Mean_Speed = [mean(final_speeds_heavy_norms), mean(final_speeds_light_2_norms)],
-    Median_Speed = [median(final_speeds_heavy_norms), median(final_speeds_light_2_norms)],
-    STD_half = [std(final_speeds_heavy_norms)/2, std(final_speeds_light_2_norms)/2]
-    )
-
-    println(data_speeds)
     
+    # Return outputs
     product_types = [product_names[2][2], product_names[1][3], product_names[2][3]]
-    product_velocities = [final_speeds_heavy, final_speeds_light_1, final_speeds_light_2]
+    product_velocities = [final_speeds_heavy_2, final_speeds_light_1, final_speeds_light_2]
 
     return product_velocities, product_types
 end
@@ -167,11 +162,15 @@ end
 function DPI_logic_multiple(photon_energy_vector::Vector{Float32}, 
                         snames::NTuple{2, NTuple{3, String}}, tsh_energy::NTuple{2, Float32}, 
                         parent_velocity::Real, sun_tuple)
+    
+    # First Ionisation reaction
     reaction = PhotoReaction(eV2J(tsh_energy[1]), parent_velocity, sun_tuple, snames[1], true)
     final_speeds_ion = multiple_photoionisation(reaction, photon_energy_vector)
 
+    # Second Ionisation reaction
     reaction = PhotoReaction(eV2J(tsh_energy[2]), Float32(mean(norm.(final_speeds_ion))), 
                                 sun_tuple, snames[2], true)
+    
     product_velocities = [multiple_photoionisation(reaction, photon_energy_vector)]
     product_types = [snames[2][2]]
 
@@ -214,12 +213,14 @@ function DiPI_logic_multiple(photon_energy_vector::Vector{Float32},
                             snames::NTuple{2, NTuple{3, String}}, 
                             tsh_energy::NTuple{2, Float32}, parent_velocity::Real, sun_tuple)
 
+    # First Ionisation reaction
     reaction = 
         PhotoReaction(eV2J(tsh_energy[1]), parent_velocity, sun_tuple, snames[1], true)
     final_speeds_ion = multiple_photoionisation(reaction, photon_energy_vector)
 
     product_names = map(s -> replace(s, r"\(\+\)" => ""), snames[2])
     
+    # Dissociation reaction
     reaction = PhotoReaction(eV2J(tsh_energy[2]), 
                             Float32(mean(norm.(final_speeds_ion))), 
                             sun_tuple, product_names, true)
