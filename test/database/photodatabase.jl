@@ -2,12 +2,18 @@ const m_fund = 1.66054e-27 # 1 M.U.
 
 println("TESTING photodatabase.jl ...............")
 
+
+# ─────────────────────────────────────────────────────────────────────────────────────────
+# TEST 1: Validate Structure of Photochemical Database
+# ─────────────────────────────────────────────────────────────────────────────────────────
+
 @testset verbose=true "Photodatabase Tables Validation" begin
 
     # 0. Test that database exists
     @testset verbose=true "Database exists for all parents in exosphid_species" begin
         for parent in exosphid_species
-            @test isfile(joinpath(@__DIR__, "..", "..", "src", "database", "species", "$parent.jl"))
+            @test isfile(joinpath(@__DIR__, "..", "..", "src", "database", "species", 
+                                    "$parent.jl"))
         end
     end
 
@@ -29,7 +35,7 @@ println("TESTING photodatabase.jl ...............")
             
             N = length(photo_info.reaction_types)
 
-            # 2. All tables have the same length
+            # 2. All tables have the right length
             @testset verbose=true "Test data has the right length" begin
                 @test length(photo_info.tsh_energies) == N
                 @test length(photo_info.species_names) == N
@@ -37,7 +43,7 @@ println("TESTING photodatabase.jl ...............")
                 @test length(photo_info.reaction_names) == N
             end
 
-            # 3. Each element
+            # 3. Each element has correct information, type and structure
             @testset verbose=true "Database has correct structure and type" begin
                 for (i, rt) in enumerate(photo_info.reaction_types)
                     
@@ -82,24 +88,31 @@ println("TESTING photodatabase.jl ...............")
                                     masses = (EXOSPHID.get_masses(sns[1]), 
                                               EXOSPHID.get_masses(sns[2]), 
                                               EXOSPHID.get_masses(sns[3]))
-                                    # This checks that the species are correctly ordered: parent - heavy - light
-                                    # It may be that there is no heavy and light product, such as H2 -> H + H
+                                    # This checks that the species are correctly ordered: 
+                                    # parent - heavy - light
+                                    # It may be that there is no heavy and light product, 
+                                    # such as H2 -> H + H
                                     @test masses[1] > masses[2] && masses[2]  >= masses[3]
                                 end
+
                             elseif rt in ("DPD", "DPI", "DiPI")
                                 @test sn isa Tuple
                                 @test length(sn) == 2
-                                @test all(sub -> sub isa Tuple && length(sub) == 3 && all(x -> x isa String, sub), sn)
+                                @test all(sub -> sub isa Tuple && length(sub) == 3 && 
+                                      all(x -> x isa String, sub), sn)
                                 
                                 if rt == "DPI"
 
                                     for species_tuple in sn
                                         @test species_tuple[1] in exosphid_species
                                         # Same checks as SPI!!!
-                                        sns = map(s -> replace(s, r"\(.*\)" => ""),species_tuple)
-
-                                        if !occursin("(-)", species_tuple[1]) # negative hydrogen case
-                                            @test species_tuple[2] == species_tuple[1] * "(+)"
+                                        sns = map(s -> replace(s, r"\(.*\)" => ""),
+                                                  species_tuple)
+                                        
+                                        # negative hydrogen case
+                                        if !occursin("(-)", species_tuple[1]) 
+                                            @test species_tuple[2] == 
+                                                    species_tuple[1] * "(+)"
                                         else
                                             @test species_tuple[2] == sns[1]
                                         end
@@ -108,11 +121,13 @@ println("TESTING photodatabase.jl ...............")
 
                                 elseif rt == "DPD"
                                     for st in sn
-                                        species_tuple = map(s -> replace(s, r"\(.*\)" => ""),st)
+                                        species_tuple = 
+                                            map(s -> replace(s, r"\(.*\)" => ""),st)
                                         masses = (EXOSPHID.get_masses(species_tuple[1]), 
                                                   EXOSPHID.get_masses(species_tuple[2]), 
                                                   EXOSPHID.get_masses(species_tuple[3]))
-                                        @test masses[1] > masses[2] && masses[2]  >= masses[3]
+                                        @test masses[1] > masses[2] && 
+                                              masses[2]  >= masses[3]
                                     end
 
                                 elseif rt == "DiPI"
@@ -162,12 +177,14 @@ println("TESTING photodatabase.jl ...............")
 
             # 5. Species spefic Wavelength Ranges are always below threshold
             @testset verbose=true "Wavelength ranges are below threshold" begin
-                @test all(range -> range[2] <= photo_info.wvl_threshold, photo_info.wavelength_range)
+                @test all(range -> range[2] <= 
+                            photo_info.wvl_threshold, photo_info.wavelength_range)
             end
 
             # 6. Reaction probabilities for specific wavelength range sum 1
             @testset verbose=true "Cumulated probability per wvl range is 1" begin
-                @test all(sum(photo_info.reaction_probabilities[j][i] for j in 1:N) == 1.0 for i in 1:length(photo_info.wavelength_range))
+                @test all(sum(photo_info.reaction_probabilities[j][i] for j in 1:N) == 1.0 
+                            for i in 1:length(photo_info.wavelength_range))
             end
 
             # 7. Positive photodestruction rates
@@ -177,10 +194,12 @@ println("TESTING photodatabase.jl ...............")
                 @test EXOSPHID.get_photodestruction_rates(photo_info, rand(Float32), 1.0) > 0
             end
 
+            # 8. Test that active photo rates are larger or equal to quiet photo rates
             @testset verbose=true "Active Photodestruction rate >= quiet rate" begin
                 @test photo_info.quiet_rate <= photo_info.active_rate
             end
 
+            # 9. Make sure photo rates are consistent to the solar flux database
             @testset verbose=true "Photorates consistent with fluxes" begin
 
                 @testset verbose=true "Normalized" begin
@@ -209,6 +228,10 @@ println("TESTING photodatabase.jl ...............")
     end
 end
 
+
+# ─────────────────────────────────────────────────────────────────────────────────────────
+# TEST 2: Test various functions from photodatabase.jl
+# ─────────────────────────────────────────────────────────────────────────────────────────
 
 @testset verbose = true "is_photoreaction_occuring" begin
     @test EXOSPHID.is_photoreaction_occuring(rand(Float32), rand(Float32)) isa Bool
@@ -241,6 +264,27 @@ end
     end
     
 end
+
+@testset verbose = true "SPECIES MASSES" begin
+    @testset verbose=true "Mass available for given species" begin
+        @test length(EXOSPHID.mass_species) == length(EXOSPHID.mass_dict)
+    end
+    @testset verbose=true "Masses are positive and within expected range" begin
+        @test all(0 .<= EXOSPHID.mass_dict .<= 300*EXOSPHID.m_fund)
+    end
+    @testset "get_masses returns numeric values" begin
+        for sp in exosphid_species
+            masses = EXOSPHID.get_masses(sp)
+            @test masses !== nothing
+            @test masses isa Float64
+        end
+    end
+end
+
+
+# ─────────────────────────────────────────────────────────────────────────────────────────
+# TEST 3: Test vibrorotational and electronic energy database
+# ─────────────────────────────────────────────────────────────────────────────────────────
 
 @testset verbose = true "Vibrorotational energy" begin
 
@@ -329,21 +373,5 @@ end
     end
 end
 
-
-@testset verbose = true "SPECIES MASSES" begin
-    @testset verbose=true "Mass available for given species" begin
-        @test length(EXOSPHID.mass_species) == length(EXOSPHID.mass_dict)
-    end
-    @testset verbose=true "Masses are positive and within expected range" begin
-        @test all(0 .<= EXOSPHID.mass_dict .<= 300*EXOSPHID.m_fund)
-    end
-    @testset "get_masses returns numeric values" begin
-        for sp in exosphid_species
-            masses = EXOSPHID.get_masses(sp)
-            @test masses !== nothing
-            @test masses isa Float64
-        end
-    end
-end
 
 println("............... COMPLETED TESTING photodatabase.jl\n")
