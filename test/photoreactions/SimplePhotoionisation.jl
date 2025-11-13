@@ -1,8 +1,6 @@
 using Test
 using LinearAlgebra
 
-const eV_to_J = 1.602f-19
-
 
 println("TESTING SimplePhotoionisation.jl ............... ")
 
@@ -37,7 +35,9 @@ println("TESTING SimplePhotoionisation.jl ............... ")
 
     @testset verbose=true "Test Positive excess energy and velocities" begin
 
-        vps = Dict("H2O" => 590.0, "OH" => 605.0, "H2" => 1750.0, "H" => 2500.0, "H(-)"=> 2500.0, "HO2" => 425.0, "H2O2" => 435.0, "He" => 1250.0, "Ne" => 560.0)
+        vps = Dict("H2O" => 590.0, "OH" => 605.0, "H2" => 1750.0, "H" => 2500.0, 
+                   "H(-)"=> 2500.0, "HO2" => 425.0, "H2O2" => 435.0, 
+                   "He" => 1250.0, "Ne" => 560.0)
 
         num_reactions = 10_000
         sa = 0
@@ -56,7 +56,7 @@ println("TESTING SimplePhotoionisation.jl ............... ")
 
                 vp = Float32(vps[pt]) .* EXOSPHID.random_unit_tuple()
                 st = EXOSPHID.random_unit_tuple()
-                mp = EXOSPHID.get_masses(pt, mode="PI")
+                mp = EXOSPHID.get_masses(pt)
 
                 for (i, rt) in enumerate(rts)
 
@@ -66,11 +66,11 @@ println("TESTING SimplePhotoionisation.jl ............... ")
 
                         for (wi, wr) in enumerate(wrs)
                             if rps[i][wi] != 0.0
-                                @testset verbose=false "Reaction: $rn | Wavelength range: $wr" begin
+                                @testset verbose=false "Reaction: $rn | λ: $wr" begin
                                     wvls, energs = flux_outputs(pt, wr, sa, num_reactions)
 
                                     if rt == "SPI"
-                                        tsh = tshs[i] * eV_to_J
+                                        tsh = EXOSPHID.eV2J(tshs[i])
                                         pn = sns[i]
                                         r1 = EXOSPHID.PhotoReaction(tsh, vp, st, pn, false)
 
@@ -87,7 +87,8 @@ println("TESTING SimplePhotoionisation.jl ............... ")
                                                 pp = EXOSPHID.calculate_photon_momentum(Ep, st)
                                                 vion = EXOSPHID.allocate_velocity_ionisation(r1, Ee, mp, pp)
                                                 tol = 1e-6
-                                                @test (Ee==0 && norm(vion)) || (Ee != 0 && (norm(vion) !=0))
+                                                @test (Ee==0 && norm(vion)) || 
+                                                      (Ee != 0 && (norm(vion) !=0))
                                             end
                                         end 
 
@@ -95,7 +96,7 @@ println("TESTING SimplePhotoionisation.jl ............... ")
 
                                         # First dissociation
 
-                                        tsh = tshs[i][1] * eV_to_J
+                                        tsh = EXOSPHID.eV2J(tshs[i][1])
                                         pn = sns[i][1]
                                         r1 = EXOSPHID.PhotoReaction(tsh, vp, st, pn, false)
 
@@ -115,12 +116,13 @@ println("TESTING SimplePhotoionisation.jl ............... ")
                                                 vion = EXOSPHID.allocate_velocity_ionisation(r1, Ee, mp, pp)
                                                 vion_aux = vion
                                                 tol = 1e-6
-                                                @test (Ee==0 && norm(vion) < tol) || (Ee != 0 && (norm(vion) !=0))
+                                                @test (Ee==0 && norm(vion) < tol) || 
+                                                      (Ee != 0 && (norm(vion) !=0))
                                             end
                                         end
 
                                         # Second dissociation
-                                        tsh = tshs[i][2] * eV_to_J
+                                        tsh = EXOSPHID.eV2J(tshs[i][2])
                                         pn = sns[i][2]
                                         vp2 = map(Float32, vion_aux)
                                         r2 = EXOSPHID.PhotoReaction(tsh, vp2, st, pn, false)
@@ -138,7 +140,8 @@ println("TESTING SimplePhotoionisation.jl ............... ")
                                                 pp = EXOSPHID.calculate_photon_momentum(Ep, st)
                                                 vion = EXOSPHID.allocate_velocity_ionisation(r2, Ee, mp, pp)
                                                 tol = 1e-6
-                                                @test (Ee==0 && norm(vion) < tol) || (Ee != 0 && norm(vion) !=0)
+                                                @test (Ee==0 && norm(vion) < tol) || 
+                                                    (Ee != 0 && norm(vion) !=0)
                                             end
                                         end
 
@@ -162,7 +165,9 @@ println("TESTING SimplePhotoionisation.jl ............... ")
 
     @testset verbose=true "simulate_photoionisation() output type" begin
 
-        vps = Dict("H2O" => 590.0, "OH" => 605.0, "H2" => 1750.0, "H" => 2500.0, "H(-)"=> 2500.0, "HO2" => 425.0, "H2O2" => 435.0, "He" => 1250.0, "Ne" => 560.0)
+        vps = Dict("H2O" => 590.0, "OH" => 605.0, "H2" => 1750.0, "H" => 2500.0, 
+                   "H(-)"=> 2500.0, "HO2" => 425.0, "H2O2" => 435.0, 
+                   "He" => 1250.0, "Ne" => 560.0)
 
         num_reactions = 10_000
         sa = 0
@@ -181,7 +186,7 @@ println("TESTING SimplePhotoionisation.jl ............... ")
 
                 vp = Float32(vps[pt]) .* EXOSPHID.random_unit_tuple()
                 st = EXOSPHID.random_unit_tuple()
-                mp = EXOSPHID.get_masses(pt, mode="PI")
+                mp = EXOSPHID.get_masses(pt)
 
                 for (i, rt) in enumerate(rts)
 
@@ -191,23 +196,24 @@ println("TESTING SimplePhotoionisation.jl ............... ")
 
                         for (wi, wr) in enumerate(wrs)
                             if rps[i][wi] != 0.0
-                                @testset verbose=false "Reaction: $rn | Wavelength range: $wr" begin
+                                @testset verbose=false "Reaction: $rn | λ: $wr" begin
                                     wvls, energs = flux_outputs(pt, wr, sa, num_reactions)
 
                                     if rt == "SPI"
-                                        tsh = tshs[i] * eV_to_J
+                                        tsh = EXOSPHID.eV2J(tshs[i])
                                         pn = sns[i]
                                         r1 = EXOSPHID.PhotoReaction(tsh, vp, st, pn, false)
 
                                         for Ep in energs
-                                            @test simulate_photoionisation(r1, Ep) isa NTuple{3, Float32}
+                                            @test simulate_photoionisation(r1, Ep) isa 
+                                                NTuple{3, Float32}
                                         end
 
                                     elseif rt == "DPI"
 
                                         # First dissociation
 
-                                        tsh = tshs[i][1] * eV_to_J
+                                        tsh = EXOSPHID.eV2J(tshs[i][1])
                                         pn = sns[i][1]
                                         r1 = EXOSPHID.PhotoReaction(tsh, vp, st, pn, false)
 
@@ -220,13 +226,14 @@ println("TESTING SimplePhotoionisation.jl ............... ")
 
 
                                         # Second dissociation
-                                        tsh = tshs[i][2] * eV_to_J
+                                        tsh = EXOSPHID.eV2J(tshs[i][2])
                                         pn = sns[i][2]
                                         vp2 = map(Float32, vion)
                                         r2 = EXOSPHID.PhotoReaction(tsh, vp2, st, pn, false)
 
                                         for Ep in energs
-                                            @test simulate_photoionisation(r2, Ep) isa NTuple{3, Float32}
+                                            @test simulate_photoionisation(r2, Ep) isa 
+                                                    NTuple{3, Float32}
                                         end
 
                                     end
@@ -249,7 +256,9 @@ println("TESTING SimplePhotoionisation.jl ............... ")
 
     @testset verbose=true "multiple_photoionisation() output type and size" begin
 
-        vps = Dict("H2O" => 590.0, "OH" => 605.0, "H2" => 1750.0, "H" => 2500.0, "H(-)"=> 2500.0, "HO2" => 425.0, "H2O2" => 435.0, "He" => 1250.0, "Ne" => 560.0)
+        vps = Dict("H2O" => 590.0, "OH" => 605.0, "H2" => 1750.0, "H" => 2500.0, 
+                   "H(-)"=> 2500.0, "HO2" => 425.0, "H2O2" => 435.0, 
+                   "He" => 1250.0, "Ne" => 560.0)
 
         num_reactions = 10_000
         sa = 0
@@ -268,7 +277,7 @@ println("TESTING SimplePhotoionisation.jl ............... ")
 
                 vp = Float32(vps[pt]) .* EXOSPHID.random_unit_tuple()
                 st = EXOSPHID.random_unit_tuple()
-                mp = EXOSPHID.get_masses(pt, mode="PI")
+                mp = EXOSPHID.get_masses(pt)
 
                 for (i, rt) in enumerate(rts)
 
@@ -278,11 +287,11 @@ println("TESTING SimplePhotoionisation.jl ............... ")
 
                         for (wi, wr) in enumerate(wrs)
                             if rps[i][wi] != 0.0
-                                @testset verbose=false "Reaction: $rn | Wavelength range: $wr" begin
+                                @testset verbose=false "Reaction: $rn | : $wr" begin
                                     wvls, energs = flux_outputs(pt, wr, sa, num_reactions)
 
                                     if rt == "SPI"
-                                        tsh = tshs[i] * eV_to_J
+                                        tsh = EXOSPHID.eV2J(tshs[i])
                                         pn = sns[i]
                                         r1 = EXOSPHID.PhotoReaction(tsh, vp, st, pn, false)
                                         vel = multiple_photoionisation(r1, energs) 
@@ -293,7 +302,7 @@ println("TESTING SimplePhotoionisation.jl ............... ")
 
                                         # First dissociation
 
-                                        tsh = tshs[i][1] * eV_to_J
+                                        tsh = EXOSPHID.eV2J(tshs[i][1])
                                         pn = sns[i][1]
                                         r1 = EXOSPHID.PhotoReaction(tsh, vp, st, pn, false)
 
@@ -303,7 +312,7 @@ println("TESTING SimplePhotoionisation.jl ............... ")
 
 
                                         # Second dissociation
-                                        tsh = tshs[i][2] * eV_to_J
+                                        tsh = EXOSPHID.eV2J(tshs[i][2])
                                         pn = sns[i][2]
                                         vp2 = map(Float32, vel[end])
                                         r2 = EXOSPHID.PhotoReaction(tsh, vp2, st, pn, false)

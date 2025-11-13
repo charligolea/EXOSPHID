@@ -37,8 +37,8 @@ println("TESTING SimplePhotodissociation.jl ............... ")
 
     @testset verbose=true "calculate_excess_energy_dissociation()" begin
         mp = 17 * m_fund
-        Ep = 5.0f0 * eV_to_J
-        Eb = 4.0f0 * eV_to_J
+        Ep = EXOSPHID.eV2J(5.0f0)
+        Eb = EXOSPHID.eV2J(4.0f0)
         vp = 600.0f0 .* EXOSPHID.random_unit_tuple()
         st = EXOSPHID.random_unit_tuple()
 
@@ -46,7 +46,8 @@ println("TESTING SimplePhotodissociation.jl ............... ")
         pn = ("OH(B2Σ)", "O(1S)", "H")
         r1 = EXOSPHID.PhotoReaction(Eb, vp, st, pn, false)
         E1 = EXOSPHID.calculate_excess_energy_dissociation(r1, mp, Ep)
-        @test isapprox(E1, Ep - EXOSPHID.get_electronic_energy_predis("OH(B2Σ)") -EXOSPHID.get_vibrorotational_energy("OH(B2Σ)"); atol=1e-6)
+        @test isapprox(E1, Ep - EXOSPHID.get_electronic_energy_predis("OH(B2Σ)") -
+                        EXOSPHID.get_vibrorotational_energy("OH(B2Σ)"); atol=1e-6)
 
         # Case 2: OH(DPD)
         pn = ("OH(B2Σ)", "O(1S)", "H")
@@ -58,13 +59,17 @@ println("TESTING SimplePhotodissociation.jl ............... ")
         pn = ("H2O", "OH(A2Σ+)", "H")
         r3 = EXOSPHID.PhotoReaction(Eb, vp, st, pn, false)
         E3 = EXOSPHID.calculate_excess_energy_dissociation(r3, mp, Ep)
-        E_expected = (Ep + 0.5f0*mp*norm(vp)^2 + EXOSPHID.get_vibrorotational_energy("H2O")) - Eb - (EXOSPHID.get_vibrorotational_energy("H") + EXOSPHID.get_vibrorotational_energy("OH(A2Σ+)"))
+        E_expected = (Ep + 0.5f0*mp*norm(vp)^2 + EXOSPHID.get_vibrorotational_energy("H2O")) 
+                        - Eb - (EXOSPHID.get_vibrorotational_energy("H") + 
+                                EXOSPHID.get_vibrorotational_energy("OH(A2Σ+)"))
         @test isapprox(E3, E_expected; atol=1e-6)
     end
 
     @testset verbose=true "Test Positive excess energy and velocities" begin
 
-        vps = Dict("H2O" => 590.0, "OH" => 605.0, "H2" => 1750.0, "H" => 2500.0, "H(-)"=> 2500.0, "HO2" => 425.0, "H2O2" => 435.0, "He" => 1250.0, "Ne" => 560.0)
+        vps = Dict("H2O" => 590.0, "OH" => 605.0, "H2" => 1750.0, "H" => 2500.0, 
+                    "H(-)"=> 2500.0, "HO2" => 425.0, "H2O2" => 435.0, 
+                    "He" => 1250.0, "Ne" => 560.0)
 
         num_reactions = 10_000
         sa = 0
@@ -92,15 +97,17 @@ println("TESTING SimplePhotodissociation.jl ............... ")
 
                         for (wi, wr) in enumerate(wrs)
                             if rps[i][wi] != 0.0
-                                @testset verbose=false "Reaction: $rn | Wavelength range: $wr" begin
+                                @testset verbose=false "Reaction: $rn | λ: $wr" begin
                                     wvls, energs = flux_outputs(pt, wr, sa, num_reactions)
 
                                     if rt == "SPD"
-                                        tsh = tshs[i] * eV_to_J
+                                        tsh = EXOSPHID.eV2J(tshs[i])
                                         pn = sns[i]
                                         r1 = EXOSPHID.PhotoReaction(tsh, vp, st, pn, false)
                                         p, h, l = r1.product_types
-                                        m = EXOSPHID.get_masses(p, heavy_child_name=h, light_child_name=l)
+                                        m = (EXOSPHID.get_masses(p), 
+                                             EXOSPHID.get_masses(h), 
+                                             EXOSPHID.get_masses(l))
 
                                         @testset "Positive Excess Energy" begin
                                             for Ep in energs
@@ -115,7 +122,8 @@ println("TESTING SimplePhotodissociation.jl ............... ")
                                                 pp = EXOSPHID.calculate_photon_momentum(Ep, st)
                                                 vl, vh = EXOSPHID.allocate_velocity_dissociation(r1, Ee, m, pp)
                                             tol = 1e-6
-                                                @test (Ee==0 && norm(vh) < tol && norm(vl) < tol) || (Ee != 0 && (norm(vh) !=0  || norm(vl) !=0))
+                                                @test (Ee==0 && norm(vh) < tol && norm(vl) < tol) || 
+                                                      (Ee != 0 && (norm(vh) !=0  || norm(vl) !=0))
                                             end
                                         end 
 
@@ -123,11 +131,13 @@ println("TESTING SimplePhotodissociation.jl ............... ")
 
                                         # First dissociation
 
-                                        tsh = tshs[i][1] * eV_to_J
+                                        tsh = EXOSPHID.eV2J(tshs[i][1])
                                         pn = sns[i][1]
                                         r1 = EXOSPHID.PhotoReaction(tsh, vp, st, pn, false)
                                         p, h, l = r1.product_types
-                                        m = EXOSPHID.get_masses(p, heavy_child_name=h, light_child_name=l)
+                                        m = (EXOSPHID.get_masses(p), 
+                                             EXOSPHID.get_masses(h), 
+                                             EXOSPHID.get_masses(l))
 
                                         @testset "First Step: Excess Energy" begin
                                             for Ep in energs
@@ -145,17 +155,20 @@ println("TESTING SimplePhotodissociation.jl ............... ")
                                                 vl, vh = EXOSPHID.allocate_velocity_dissociation(r1, Ee, m, pp)
                                                 vh_aux = vh
                                                 tol = 1e-6
-                                                @test (Ee==0 && norm(vh) < tol && norm(vl) < tol) || (Ee != 0 && (norm(vh) !=0  || norm(vl) !=0))
+                                                @test (Ee==0 && norm(vh) < tol && norm(vl) < tol) || 
+                                                      (Ee != 0 && (norm(vh) !=0  || norm(vl) !=0))
                                             end
                                         end
 
                                         # Second dissociation
-                                        tsh = tshs[i][2] * eV_to_J
+                                        tsh = EXOSPHID.eV2J(tshs[i][2])
                                         pn = sns[i][2]
                                         vp2 = map(Float32, vh_aux)
                                         r2 = EXOSPHID.PhotoReaction(tsh, vp2, st, pn, false)
                                         p, h, l = r2.product_types
-                                        m = EXOSPHID.get_masses(p, heavy_child_name=h, light_child_name=l)
+                                        m = (EXOSPHID.get_masses(p), 
+                                             EXOSPHID.get_masses(h), 
+                                             EXOSPHID.get_masses(l))
 
                                         @testset "Second Step: Excess Energy" begin
                                             for Ep in energs
@@ -170,16 +183,19 @@ println("TESTING SimplePhotodissociation.jl ............... ")
                                                 pp = EXOSPHID.calculate_photon_momentum(Ep, st)
                                                 vl, vh = EXOSPHID.allocate_velocity_dissociation(r2, Ee, m, pp)
                                                 tol = 1e-6
-                                                @test (Ee==0 && norm(vh) < tol && norm(vl) < tol) || (Ee != 0 && (norm(vh) !=0  || norm(vl) !=0))
+                                                @test (Ee==0 && norm(vh) < tol && norm(vl) < tol) || 
+                                                      (Ee != 0 && (norm(vh) !=0  || norm(vl) !=0))
                                             end
                                         end
 
                                     elseif rt == "DiPI"
-                                        tsh = tshs[i][2] * eV_to_J
+                                        tsh = EXOSPHID.eV2J(tshs[i][2])
                                         pn = map(s -> replace(s, r"\(.*\)" => ""), sns[i][2])
                                         r1 = EXOSPHID.PhotoReaction(tsh, vp, st, pn, false)
                                         p, h, l = r1.product_types
-                                        m = EXOSPHID.get_masses(p, heavy_child_name=h, light_child_name=l)
+                                        m = (EXOSPHID.get_masses(p), 
+                                             EXOSPHID.get_masses(h), 
+                                             EXOSPHID.get_masses(l))
 
                                         @testset "Excess Energy" begin
                                             for Ep in energs
@@ -194,7 +210,8 @@ println("TESTING SimplePhotodissociation.jl ............... ")
                                                 pp = EXOSPHID.calculate_photon_momentum(Ep, st)
                                                 vl, vh = EXOSPHID.allocate_velocity_dissociation(r1, Ee, m, pp)
                                                 tol = 1e-6
-                                                @test (Ee==0 && norm(vh) < tol && norm(vl) < tol) || (Ee != 0 && (norm(vh) !=0  || norm(vl) !=0))
+                                                @test (Ee==0 && norm(vh) < tol && norm(vl) < tol) || 
+                                                    (Ee != 0 && (norm(vh) !=0  || norm(vl) !=0))
                                             end
                                         end
                                     end
@@ -217,7 +234,9 @@ println("TESTING SimplePhotodissociation.jl ............... ")
 
     @testset verbose=true "simulate_photodissociation() output type" begin
 
-        vps = Dict("H2O" => 590.0, "OH" => 605.0, "H2" => 1750.0, "H" => 2500.0, "H(-)"=> 2500.0, "HO2" => 425.0, "H2O2" => 435.0, "He" => 1250.0, "Ne" => 560.0)
+        vps = Dict("H2O" => 590.0, "OH" => 605.0, "H2" => 1750.0, "H" => 2500.0, 
+                   "H(-)"=> 2500.0, "HO2" => 425.0, "H2O2" => 435.0, 
+                   "He" => 1250.0, "Ne" => 560.0)
 
         num_reactions = 10_000
         sa = 0
@@ -245,11 +264,11 @@ println("TESTING SimplePhotodissociation.jl ............... ")
 
                         for (wi, wr) in enumerate(wrs)
                             if rps[i][wi] != 0.0
-                                @testset verbose=false "Reaction: $rn | Wavelength range: $wr" begin
+                                @testset verbose=false "Reaction: $rn | λ: $wr" begin
                                     wvls, energs = flux_outputs(pt, wr, sa, num_reactions)
 
                                     if rt == "SPD"
-                                        tsh = tshs[i] * eV_to_J
+                                        tsh = EXOSPHID.eV2J(tshs[i])
                                         pn = sns[i]
                                         r1 = EXOSPHID.PhotoReaction(tsh, vp, st, pn, false)
 
@@ -264,10 +283,10 @@ println("TESTING SimplePhotodissociation.jl ............... ")
 
                                     elseif rt == "DPD"
 
-                                        vh = nothing # so that it's not lost after the loop is finished
+                                        vh = nothing 
 
                                         # First dissociation
-                                        tsh = tshs[i][1] * eV_to_J
+                                        tsh = EXOSPHID.eV2J(tshs[i][1])
                                         pn = sns[i][1]
                                         r1 = EXOSPHID.PhotoReaction(tsh, vp, st, pn, false)
                                         for (wvl, Ep) in zip(wvls, energs)
@@ -279,7 +298,7 @@ println("TESTING SimplePhotodissociation.jl ............... ")
                                         end
 
                                         # Second dissociation
-                                        tsh = tshs[i][2] * eV_to_J
+                                        tsh = EXOSPHID.eV2J(tshs[i][2])
                                         pn = sns[i][2]
                                         vp2 = map(Float32, vh)
                                         r2 = EXOSPHID.PhotoReaction(tsh, vp2, st, pn, false)
@@ -311,7 +330,9 @@ println("TESTING SimplePhotodissociation.jl ............... ")
 
     @testset verbose=true "multiple_photodissociation() output type and length" begin
 
-        vps = Dict("H2O" => 590.0, "OH" => 605.0, "H2" => 1750.0, "H" => 2500.0, "H(-)"=> 2500.0, "HO2" => 425.0, "H2O2" => 435.0, "He" => 1250.0, "Ne" => 560.0)
+        vps = Dict("H2O" => 590.0, "OH" => 605.0, "H2" => 1750.0, "H" => 2500.0, 
+                   "H(-)"=> 2500.0, "HO2" => 425.0, "H2O2" => 435.0, 
+                   "He" => 1250.0, "Ne" => 560.0)
 
         num_reactions = 10_000
         sa = 0
@@ -339,11 +360,11 @@ println("TESTING SimplePhotodissociation.jl ............... ")
 
                         for (wi, wr) in enumerate(wrs)
                             if rps[i][wi] != 0.0
-                                @testset verbose=false "Reaction: $rn | Wavelength range: $wr" begin
+                                @testset verbose=false "Reaction: $rn | λ: $wr" begin
                                     wvls, energs = flux_outputs(pt, wr, sa, num_reactions)
 
                                     if rt == "SPD"
-                                        tsh = tshs[i] * eV_to_J
+                                        tsh = EXOSPHID.eV2J(tshs[i])
                                         pn = sns[i]
                                         r1 = EXOSPHID.PhotoReaction(tsh, vp, st, pn, false)
                                         vl, vh = multiple_photodissociation(r1, energs)
@@ -356,7 +377,7 @@ println("TESTING SimplePhotodissociation.jl ............... ")
                                     elseif rt == "DPD"
 
                                         # First dissociation
-                                        tsh = tshs[i][1] * eV_to_J
+                                        tsh = EXOSPHID.eV2J(tshs[i][1])
                                         pn = sns[i][1]
                                         r1 = EXOSPHID.PhotoReaction(tsh, vp, st, pn, false)
                                         vl, vh = multiple_photodissociation(r1, energs)
@@ -367,7 +388,7 @@ println("TESTING SimplePhotodissociation.jl ............... ")
                                         @test length(vh) == num_reactions
 
                                         # Second dissociation
-                                        tsh = tshs[i][2] * eV_to_J
+                                        tsh = EXOSPHID.eV2J(tshs[i][2])
                                         pn = sns[i][2]
                                         vp2 = map(Float32, vh[end])
                                         r2 = EXOSPHID.PhotoReaction(tsh, vp2, st, pn, false)
