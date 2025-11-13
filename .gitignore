@@ -29,3 +29,5 @@ src/database/species/.DS_Store
 src/database/.DS_Store
 test/database/.DS_Store
 validation/.DS_Store
+.DS_Store
+methods/add_new_species_old.ipynb
