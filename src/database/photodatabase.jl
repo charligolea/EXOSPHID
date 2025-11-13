@@ -414,36 +414,20 @@ end
 
 
 """
-    get_masses(parent_name; heavy_child_name=nothing, light_child_name=nothing, mode="PD")
+    get_masses(species_name)
 -------------------------------------------------------------------------------------------
 
 # OBJECTIVE:
-- Get masses for the parent and child species involved in a photoreaction
-- For PD (photodissociation): returns masses of parent, heavy child, and light child
-- For PI (photoionization): returns mass of parent only
+- Get masses for a certain species
 
 # INPUTS:
-- `parent_name::String` -> Name of parent species
-- `heavy_child_name::Union{String, Nothing}` -> Name of heavier child species 
-    (required for PD)
-- `light_child_name::Union{String, Nothing}` -> Name of lighter child species 
-    (required for PD)
-- `mode::String` -> "PD" for photodissociation, "PI" for photoionization
+- `species_name`: nmame of species in question, without electronic state or charge information
+
+# EXAMPLE:
+- `H2O`, 'OH' are allowed
+- `H2O(+)`, 'O(3P)' are `NOT` allowed
 """
-function get_masses(parent_name; heavy_child_name=nothing, light_child_name=nothing, mode="PD")
-
-    m_parent = mass_dict[findfirst(isequal(parent_name), mass_species)]
-
-    if mode == "PI"
-        return m_parent
-    elseif mode == "PD"
-        @assert heavy_child_name !== nothing "heavy_child_name must be provided for PD"
-        @assert light_child_name !== nothing "light_child_name must be provided for PD"
-        m_heavy = mass_dict[findfirst(isequal(heavy_child_name), mass_species)]
-        m_light = mass_dict[findfirst(isequal(light_child_name), mass_species)]
-        return m_parent, m_heavy, m_light
-    end
-end
+get_masses(species_name) = mass_dict[findfirst(isequal(species_name), mass_species)]
 
 
 # ─────────────────────────────────────────────────────────────────────────────────────────

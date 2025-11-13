@@ -138,9 +138,9 @@ function simulate_photodissociation(reaction::PhotoReaction, photon_energy::Floa
     p_photon = calculate_photon_momentum(photon_energy, reaction.sun_tuple)
 
     # 2. Get masses for all the species involved
-    species_masses = get_masses(reaction.product_types[1]; 
-                            heavy_child_name= reaction.product_types[2], 
-                            light_child_name = reaction.product_types[3], mode="PD")
+    species_masses = (get_masses(reaction.product_types[1]), 
+                      get_masses(reaction.product_types[2]), 
+                      get_masses(reaction.product_types[3]))
 
     # 3. Calculate excess energy (J)
     E_excess = calculate_excess_energy_dissociation(reaction::PhotoReaction, 

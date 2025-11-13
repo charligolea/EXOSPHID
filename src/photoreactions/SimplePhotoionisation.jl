@@ -93,7 +93,7 @@ function simulate_photoionisation(reaction::PhotoReaction, photon_energy::Float3
     p_photon = calculate_photon_momentum(photon_energy, reaction.sun_tuple)
 
     # 2. Get masses for the parent species (also the mass of the product ion!)
-    species_masses = get_masses(reaction.product_types[1]; mode="PI")
+    species_masses = get_masses(reaction.product_types[1])
 
     # 3. Calculate excess energy for reaction (J)
     E_excess = calculate_excess_energy_ionisation(reaction.E_bond, photon_energy)
