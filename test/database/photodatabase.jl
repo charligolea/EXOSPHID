@@ -68,10 +68,73 @@ println("TESTING photodatabase.jl ...............")
                                 @test sn isa Tuple
                                 @test length(sn) == 3
                                 @test all(x -> x isa String, sn)
+
+                                sns = map(s -> replace(s, r"\(.*\)" => ""),sn)
+                                if rt == "SPI"
+                                    @test sn[1] in exosphid_species
+                                    if !occursin("(-)", sn[1]) # negative hydrogen case
+                                        @test sn[2] == sn[1] * "(+)"
+                                    else
+                                        @test sn[2] == sns[1]
+                                    end
+                                    @test sn[3] == "e(-)"
+                                else
+                                    masses = (EXOSPHID.get_masses(sns[1]), 
+                                              EXOSPHID.get_masses(sns[2]), 
+                                              EXOSPHID.get_masses(sns[3]))
+                                    # This checks that the species are correctly ordered: parent - heavy - light
+                                    # It may be that there is no heavy and light product, such as H2 -> H + H
+                                    @test masses[1] > masses[2] && masses[2]  >= masses[3]
+                                end
                             elseif rt in ("DPD", "DPI", "DiPI")
                                 @test sn isa Tuple
                                 @test length(sn) == 2
                                 @test all(sub -> sub isa Tuple && length(sub) == 3 && all(x -> x isa String, sub), sn)
+                                
+                                if rt == "DPI"
+
+                                    for species_tuple in sn
+                                        @test species_tuple[1] in exosphid_species
+                                        # Same checks as SPI!!!
+                                        sns = map(s -> replace(s, r"\(.*\)" => ""),species_tuple)
+
+                                        if !occursin("(-)", species_tuple[1]) # negative hydrogen case
+                                            @test species_tuple[2] == species_tuple[1] * "(+)"
+                                        else
+                                            @test species_tuple[2] == sns[1]
+                                        end
+                                        @test species_tuple[3] == "e(-)"
+                                    end
+
+                                elseif rt == "DPD"
+                                    for st in sn
+                                        species_tuple = map(s -> replace(s, r"\(.*\)" => ""),st)
+                                        masses = (EXOSPHID.get_masses(species_tuple[1]), 
+                                                  EXOSPHID.get_masses(species_tuple[2]), 
+                                                  EXOSPHID.get_masses(species_tuple[3]))
+                                        @test masses[1] > masses[2] && masses[2]  >= masses[3]
+                                    end
+
+                                elseif rt == "DiPI"
+                                    # Combine tests above
+
+                                    # Ionisation tests for sn[1]
+                                    @test sn[1][1] in exosphid_species
+                                    if !occursin("(-)", sn[1][1]) # negative hydrogen case
+                                        @test sn[1][2] == sn[1][1] * "(+)"
+                                    else
+                                        @test sn[1][2] == sns[1][1]
+                                    end
+                                    @test sn[1][3] == "e(-)"
+
+                                    # Dissociation tests for sn[2]
+                                    sns = map(s -> replace(s, r"\(.*\)" => ""),sn[2])
+                                    masses = (EXOSPHID.get_masses(sns[1]), 
+                                              EXOSPHID.get_masses(sns[2]), 
+                                              EXOSPHID.get_masses(sns[3]))
+                                    @test masses[1] > masses[2] && masses[2]  >= masses[3]
+                                end
+
                             end
                         end
 
@@ -110,8 +173,12 @@ println("TESTING photodatabase.jl ...............")
             # 7. Positive photodestruction rates
             @testset verbose=true "Postive Photodestruction rates" begin
                 @test photo_info.quiet_rate > 0
-                @test photo_info.quiet_rate > 0
+                @test photo_info.active_rate > 0
                 @test EXOSPHID.get_photodestruction_rates(photo_info, rand(Float32), 1.0) > 0
+            end
+
+            @testset verbose=true "Active Photodestruction rate >= quiet rate" begin
+                @test photo_info.quiet_rate <= photo_info.active_rate
             end
 
             @testset verbose=true "Photorates consistent with fluxes" begin
@@ -272,7 +339,7 @@ end
     end
     @testset "get_masses returns numeric values" begin
         for sp in exosphid_species
-            masses = EXOSPHID.get_masses(sp, mode="PI")
+            masses = EXOSPHID.get_masses(sp)
             @test masses !== nothing
             @test masses isa Float64
         end
