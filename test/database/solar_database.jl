@@ -47,8 +47,10 @@ println("TESTING of solar_database.jl ...............  ")
             nq, na = get_normalized_fluxes(pt)
 
             @testset "$pt" begin
-                @test all(isapprox.(nq, EXOSPHID.normalize_flux_distribution(EXOSPHID.solar_wavelength, sq, (1, 95000))[2] ; rtol=1e-6))
-                @test all(isapprox.(na, EXOSPHID.normalize_flux_distribution(EXOSPHID.solar_wavelength, sa, (1, 95000))[2] ; rtol=1e-6))
+                @test all(isapprox.(nq, EXOSPHID.normalize_flux_distribution(
+                    EXOSPHID.solar_wavelength, sq, (1, 95000))[2] ; rtol=1e-6))
+                @test all(isapprox.(na, EXOSPHID.normalize_flux_distribution(
+                    EXOSPHID.solar_wavelength, sa, (1, 95000))[2] ; rtol=1e-6))
             end
         end
     end
