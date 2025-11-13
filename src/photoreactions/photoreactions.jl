@@ -51,7 +51,7 @@ struct PhotoReaction
     function PhotoReaction(E_bond::Real, v_parent::AbstractArray{<:Real}, sun_tuple::AbstractArray{<:Real}, product_names::NTuple{3, String}, display_info::Bool)
         @assert length(v_parent) == 3 "v_parent must have length 3"
         @assert length(sun_tuple) == 3 "sun_tuple must have length 3"
-        vp = Float32.(v_parent)
+        vp = Float32.(Tuple(v_parent))
         st = Float32.(sun_tuple)
         PhotoReaction(Float32(E_bond), vp, st, product_names, display_info)
     end
@@ -65,7 +65,7 @@ struct PhotoReaction
 
     function PhotoReaction(E_bond::Real, v_parent::AbstractArray{<:Real}, sun_tuple::Nothing, product_names::NTuple{3, String}, display_info::Bool)
         @assert length(v_parent) == 3 "v_parent must have length 3"
-        vp = Float32.(v_parent)
+        vp = Float32.(Tuple(v_parent))
         st = random_unit_tuple()
         PhotoReaction(Float32(E_bond), vp, st, product_names, display_info)
     end
