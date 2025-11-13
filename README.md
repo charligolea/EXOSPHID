@@ -148,15 +148,15 @@ photodestruction(0, 1e10, "H2O", 550, nothing)
   - `solar_activity` : Ratio of solar activity from 0.0 to 1.0, where 0.0 corresponds to Quiet Sun (QS) conditions, and 1.0 is for the Active Sun (AS)
   - `dt` : Simulation time window [s]
   - `parent_type` : `"H2O"`, `"OH"`, `"H2"`, `"H"`, `"H(-)"`, `"HO2"`, `"H2O2"`, `"He"`, `"Ne"`
-  - `parent_velocity`: Parent velocity [m/s]
-  - `sun_tuple`: Solar vector
+  - `parent_velocity`: Parent velocity [m/s]. Can be given as scalar, or as 3D array (preferably Tuple).
+  - `sun_tuple`: Solar vector. May be given as 3D array (preferably Tuple), or as `nothing`.
 
 - **Outputs**:
   - `reaction_occurence::Bool` : True if reaction occurs
   - `present_reaction::String` : Identifier of triggered reaction (`H2O-PD1`, `OH-PI`, etc.)
-  - `product_types::Array{String}` : Reaction products
-  - `product_velocities::Array{Tuple}` : Velocity vectors of products [m/s]
-  - `wvl_range::Tuple` : Photon wavelength range that triggered the reaction
+  - `product_types::Vector{String}` : Reaction products
+  - `product_velocities::Vector{NTuple{3, Float32}}` : Velocity vectors of products [m/s]
+  - `wvl_range::Tuple{Float32, Float32}` : Photon wavelength range that triggered the reaction
 
 ---
 
