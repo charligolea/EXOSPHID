@@ -131,12 +131,6 @@ AND wavelength range  AND reaction type and compare to literature values
 function multiple_photoionisation(reaction::PhotoReaction, 
                                 photon_energy_vector::Vector{Float32})
 
-    if reaction.display_info
-        println("Simulating photoionisation reaction: " 
-            *""* reaction.product_names[1] *""* " + γ - > " 
-            *""* reaction.product_names[2] *" + e-")
-    end
-
     final_speeds_ion = NTuple{3, Float32}[]
 
     # 1. Loop over photon energy vector
@@ -179,6 +173,10 @@ end
 """
 function show_info_ionisation(reaction::PhotoReaction, 
                             final_speeds_ion::Vector{Tuple{Float32, Float32, Float32}})
+
+    println("Simulating photoionisation reaction: " 
+            *""* reaction.product_names[1] *""* " + γ - > " 
+            *""* reaction.product_names[2] *" + e-")
     final_speeds_ion_norm = norm.(final_speeds_ion)
 
     data_speeds = DataFrame(

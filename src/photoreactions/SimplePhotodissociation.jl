@@ -182,12 +182,6 @@ AND wavelength range  AND reaction type and compare to literature values
 function multiple_photodissociation(reaction::PhotoReaction, 
                                 photon_energy_vector::Vector{Float32})
 
-    if reaction.display_info
-        println("Simulating photodissociation reaction: " 
-            *""* reaction.product_names[1] *""* " + γ - > " 
-            *""* reaction.product_names[2] *""* " + " *""* reaction.product_names[3])
-    end
-
     final_speeds_light = NTuple{3, Float32}[]
     final_speeds_heavy = NTuple{3, Float32}[]
 
@@ -232,6 +226,11 @@ end
 function show_info_dissociation(reaction::PhotoReaction, 
                             final_speeds_heavy::Vector{Tuple{Float32, Float32, Float32}}, 
                             final_speeds_light::Vector{Tuple{Float32, Float32, Float32}})
+
+    println("Simulating photodissociation reaction: " 
+            *""* reaction.product_names[1] *""* " + γ - > " 
+            *""* reaction.product_names[2] *""* " + " *""* reaction.product_names[3])
+
     final_speeds_heavy_norms = norm.(final_speeds_heavy)
     final_speeds_light_norms = norm.(final_speeds_light)
 
