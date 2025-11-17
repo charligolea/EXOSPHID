@@ -1,7 +1,6 @@
 using Test
 using LinearAlgebra
 
-const eV_to_J = 1.602f-19
 const m_fund = 1.66054e-27 # 1 M.U.
 
 println("TESTING SimplePhotodissociation.jl ............... ")
