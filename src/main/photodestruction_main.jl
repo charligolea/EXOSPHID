@@ -37,6 +37,8 @@ mechanism for H2O ). Empty String "" if `reaction_occurence` is false.
 `reaction_occurence` is false
 - `product_velocities` -> [(vx1, vy1, vz1), (vx2, vy2, vz2), (vx3, vy3, vz3)] if 
 `reaction_occurence` is true or [] if `reaction_occurence` is false
+- `wvl_range` -> Relevant (wvl1, wvl2) tuple for species if 
+`reaction_occurence` is true or [] if `reaction_occurence` is false
 """
 function photodestruction(
     solar_activity::Float32, 
