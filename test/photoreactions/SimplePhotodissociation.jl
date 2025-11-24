@@ -75,7 +75,7 @@ println("TESTING SimplePhotodissociation.jl ............... ")
 
         for pt in exosphid_species
 
-            @testset verbose=true "$pt" begin
+            @testset verbose=false "$pt" begin
                 
                 photo_info = get_species_photochemical_info(pt)
                 tshs = photo_info.tsh_energies
@@ -242,7 +242,7 @@ println("TESTING SimplePhotodissociation.jl ............... ")
 
         for pt in exosphid_species
 
-            @testset verbose=true "$pt" begin
+            @testset verbose=false "$pt" begin
                 
                 photo_info = get_species_photochemical_info(pt)
                 tshs = photo_info.tsh_energies
@@ -338,7 +338,7 @@ println("TESTING SimplePhotodissociation.jl ............... ")
 
         for pt in exosphid_species
 
-            @testset verbose=true "$pt" begin
+            @testset verbose=false "$pt" begin
                 
                 photo_info = get_species_photochemical_info(pt)
                 tshs = photo_info.tsh_energies
