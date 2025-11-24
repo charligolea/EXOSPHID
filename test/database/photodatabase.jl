@@ -1,5 +1,3 @@
-const m_fund = 1.66054e-27 # 1 M.U.
-
 println("TESTING photodatabase.jl ...............")
 
 
@@ -11,32 +9,29 @@ println("TESTING photodatabase.jl ...............")
 
     # 0. Test that database exists
     @testset verbose=true "Database exists for all parents in exosphid_species" begin
-        for parent in exosphid_species
-            @test isfile(joinpath(@__DIR__, "..", "..", "src", "database", "species", 
-                                    "$parent.jl"))
-        end
+        @test all(x -> isfile(joinpath(@__DIR__, "..", "..", "src", "database", "species", "$x.jl")), exosphid_species)
     end
 
     for parent_type in exosphid_species
 
-        @testset verbose=true "$parent_type database" begin
+        @testset verbose=false "$parent_type database" begin
 
             photo_info = get_species_photochemical_info(parent_type)
             
             # 1. Test that none of the returned tables are nothing
-            @testset verbose=true "Database is complete" begin
-                @test photo_info.tsh_energies !== nothing
-                @test photo_info.species_names !== nothing
-                @test photo_info.reaction_probabilities !== nothing
-                @test photo_info.reaction_names !== nothing
-                @test photo_info.reaction_types !== nothing
-                @test photo_info.wavelength_range !== nothing
+            @testset verbose=false "Database is complete" begin
+                @test !isnothing(photo_info.tsh_energies)
+                @test !isnothing(photo_info.species_names)
+                @test !isnothing(photo_info.reaction_probabilities)
+                @test !isnothing(photo_info.reaction_names)
+                @test !isnothing(photo_info.reaction_types)
+                @test !isnothing(photo_info.wavelength_range)
             end
             
             N = length(photo_info.reaction_types)
 
             # 2. All tables have the right length
-            @testset verbose=true "Test data has the right length" begin
+            @testset verbose=false "Test data has the right length" begin
                 @test length(photo_info.tsh_energies) == N
                 @test length(photo_info.species_names) == N
                 @test length(photo_info.reaction_probabilities) == N
@@ -44,15 +39,13 @@ println("TESTING photodatabase.jl ...............")
             end
 
             # 3. Each element has correct information, type and structure
-            @testset verbose=true "Database has correct structure and type" begin
+            @testset verbose=false "Database has correct structure and type" begin
                 for (i, rt) in enumerate(photo_info.reaction_types)
                     
                     rn = photo_info.reaction_names[i]
-                    @testset verbose=true "$rn" begin
+                    @testset verbose=false "$rn" begin
 
-                        @testset verbose=true "Acceptable reaction type" begin
-                            @test rt in ("SPD", "SPI", "DPD", "DPI", "DiPI") 
-                        end
+                        @test rt in ("SPD", "SPI", "DPD", "DPI", "DiPI") 
 
                         # a) tsh_energies
                         @testset verbose=true "Threshold energies" begin
@@ -189,8 +182,7 @@ println("TESTING photodatabase.jl ...............")
 
             # 7. Positive photodestruction rates
             @testset verbose=true "Postive Photodestruction rates" begin
-                @test photo_info.quiet_rate > 0
-                @test photo_info.active_rate > 0
+                @test 0 < photo_info.quiet_rate <= photo_info.active_rate
                 @test EXOSPHID.get_photodestruction_rates(photo_info, rand(Float32), 1.0) > 0
             end
 
@@ -200,9 +192,9 @@ println("TESTING photodatabase.jl ...............")
             end
 
             # 9. Make sure photo rates are consistent to the solar flux database
-            @testset verbose=true "Photorates consistent with fluxes" begin
+            @testset verbose=false "Photorates consistent with fluxes" begin
 
-                @testset verbose=true "Normalized" begin
+                @testset verbose=false "Normalized" begin
                     qf, af = get_normalized_fluxes(parent_type)
 
                     if photo_info.quiet_rate != photo_info.active_rate
@@ -212,7 +204,7 @@ println("TESTING photodatabase.jl ...............")
                     end
                 end
 
-                @testset verbose=true "Standard" begin
+                @testset verbose=false "Standard" begin
                     qf, af = get_standard_fluxes(parent_type)
 
                     if photo_info.quiet_rate != photo_info.active_rate
@@ -240,19 +232,19 @@ end
 @testset verbose = true "get_current_reaction" begin
 
     for parent_type in exosphid_species
-        @testset verbose=true "$parent_type database" begin
+        @testset verbose=false "$parent_type database" begin
 
             photo_info = get_species_photochemical_info(parent_type)
 
-            @testset verbose=true "Photons with wvl in relevant range trigger reaction" begin
+            @testset verbose=false "Photons with wvl in relevant range trigger reaction" begin
             
                 p_wvl = photo_info.wvl_threshold * (1.f0+rand(Float32)) # Photon wavelength higher than threshold
-                @testset verbose=true "No reaction if wvl > threshold" begin
+                @testset verbose=false "No reaction if wvl > threshold" begin
                     @test get_current_reaction(p_wvl, photo_info) == ("", "", Integer[], ())
                 end
 
                 p_wvl = rand() * photo_info.wvl_threshold # Photon wavelength lower than threshold
-                @testset verbose=true "Yes reaction if wvl < threshold AND in relevant wvl_range" begin
+                @testset verbose=false "Yes reaction if wvl < threshold AND in relevant wvl_range" begin
                     if any(r -> r[1] <= p_wvl <= r[2], photo_info.wavelength_range)
                         @test get_current_reaction(p_wvl, photo_info) != ("", "", Integer[], ())
                     else
@@ -265,17 +257,16 @@ end
     
 end
 
-@testset verbose = true "SPECIES MASSES" begin
-    @testset verbose=true "Mass available for given species" begin
+@testset verbose = false "Species masses" begin
+    @testset verbose=false "Mass available for given species" begin
         @test length(EXOSPHID.mass_species) == length(EXOSPHID.mass_dict)
     end
-    @testset verbose=true "Masses are positive and within expected range" begin
+    @testset verbose=false "Masses are positive and within expected range" begin
         @test all(0 .<= EXOSPHID.mass_dict .<= 300*EXOSPHID.m_fund)
     end
     @testset "get_masses returns numeric values" begin
         for sp in exosphid_species
             masses = EXOSPHID.get_masses(sp)
-            @test masses !== nothing
             @test masses isa Float64
         end
     end
@@ -286,7 +277,7 @@ end
 # TEST 3: Test vibrorotational and electronic energy database
 # ─────────────────────────────────────────────────────────────────────────────────────────
 
-@testset verbose = true "Vibrorotational energy" begin
+@testset verbose = false "Vibrorotational energy" begin
 
     tested_states = []
 
@@ -301,11 +292,11 @@ end
                     for sp in spns[i]
                         if sp ∉ tested_states
                             push!(tested_states, sp)
-                            @testset verbose=true "$sp" begin
-                                @testset verbose=true "Available" begin
+                            @testset verbose=false "$sp" begin
+                                @testset verbose=false "Available" begin
                                     @test EXOSPHID.get_vibrorotational_energy(sp) !== nothing
                                 end
-                                @testset verbose=true "Positive" begin
+                                @testset verbose=false "Positive" begin
                                     @test EXOSPHID.get_vibrorotational_energy(sp) >=0.0
                                 end
                             end
@@ -315,11 +306,11 @@ end
                     for sp in spns[i][1]
                         if sp ∉ tested_states
                             push!(tested_states, sp)
-                            @testset verbose=true "$sp" begin
-                                @testset verbose=true "Available" begin
+                            @testset verbose=false "$sp" begin
+                                @testset verbose=false "Available" begin
                                     @test EXOSPHID.get_vibrorotational_energy(sp) !== nothing
                                 end
-                                @testset verbose=true "Positive" begin
+                                @testset verbose=false "Positive" begin
                                     @test EXOSPHID.get_vibrorotational_energy(sp) >= 0.0
                                 end
                             end
@@ -329,11 +320,11 @@ end
                     for sp in map(s -> replace(s, r"\(.*\)" => ""),(spns[i][2]))
                         if sp ∉ tested_states
                             push!(tested_states, sp)
-                            @testset verbose=true "$sp" begin
-                                @testset verbose=true "Available" begin 
+                            @testset verbose=false "$sp" begin
+                                @testset verbose=false "Available" begin 
                                     @test EXOSPHID.get_vibrorotational_energy(sp) !== nothing
                                 end
-                                @testset verbose=true "Positive" begin 
+                                @testset verbose=false "Positive" begin 
                                     @test EXOSPHID.get_vibrorotational_energy(sp) >= 0.0
                                 end
                             end
@@ -345,7 +336,7 @@ end
     end
 end
 
-@testset verbose = true "Electronic predissociation energy" begin
+@testset verbose = false "Electronic predissociation energy" begin
 
     tested_states = []
 
@@ -359,11 +350,11 @@ end
                 sp_OH = spns[i][1]
                 if sp_OH ∉ tested_states
                     push!(tested_states, sp_OH)
-                    @testset verbose=true "$sp_OH" begin
-                        @testset verbose=true "Available" begin
+                    @testset verbose=false "$sp_OH" begin
+                        @testset verbose=false "Available" begin
                             @test EXOSPHID.get_electronic_energy_predis(sp_OH) !== nothing
                         end
-                        @testset verbose=true "Positive" begin
+                        @testset verbose=false "Positive" begin
                             @test EXOSPHID.get_electronic_energy_predis(sp_OH) >=0.0
                         end
                     end
