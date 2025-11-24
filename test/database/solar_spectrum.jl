@@ -39,9 +39,9 @@ end
 
     for pt in exosphid_species
 
-        @testset "$pt" verbose=true begin 
+        @testset "$pt" verbose=false begin 
                 
-            @testset "Check flux Array Lengths are correct for reduced WVL range" begin
+            @testset verbose=false "Check flux Array Lengths are correct for reduced WVL range" begin
                 for i in 1:1000 # Try out 1000 cases
                     wvrange = sample_two_separated()
                     tol = 1e-5
@@ -52,7 +52,7 @@ end
                 end
             end
 
-            @testset "Check Normalization is well done for reduced WVL range" begin
+            @testset verbose=false "Check Normalization is well done for reduced WVL range" begin
                 for i in 1:1000 # Try out 1000 cases
                     wvrange = sample_two_separated()
                     tol = 1e-5
