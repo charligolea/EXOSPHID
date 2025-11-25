@@ -218,11 +218,13 @@ These scripts include comparisons with published results to ensure reproducibili
 ---
 
 ## 🚀 Applications
-This repository can be used independently or be integrated with an exospheric framework such as:
+`EXOSPHID` provides a flexible toolset to model photodestruction reactions, which can be integrated within a larger exospheric modeling framework. One such example is:
 
 - [**Extraterrestrial Exosphere and Surface Simulations (ExESS)**](https://github.com/Smolkaa/ExESS.jl)
   Developed by A. Peschel, TU Munich.  
   *(contact: a.peschel@tum.de)*
+
+`ExESS` is a comprehensive numerical model of the lunar exosphere that simulates the distribution and behaviour of multiple volatile species.  
 
 ---
 
