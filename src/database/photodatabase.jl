@@ -18,21 +18,10 @@ const c = 2.99792458f8               # Speed of light in m/s
 const m_el = 9.1093837e-31           # Electron mass in kg
 
 """
-`m_fund`: 1 A.M.U.
-"""
-const m_fund = 1.66054e-27           # 1 A.M.U.
-
-"""
 `mass_species`: Relevant atomic / molecular species that appear either as parent or daughter 
     products in the EXOSPHID database
 """
 const mass_species = ("H", "H(-)", "H2", "O", "OH", "H2O", "HO2", "H2O2", "He", "Ne")
-
-"""
-`mass_dict`: Masses corresponding to the species in mass_species
-"""
-const mass_dict = (1* m_fund, 1* m_fund, 2 * m_fund, 16 * m_fund, 17 * m_fund, 18 * m_fund, 
-                   33 * m_fund, 34 * m_fund, 4 * m_fund, 20 * m_fund)
 
 
 """
@@ -71,6 +60,25 @@ eV2J(eV)
 """
 eV2J(eV::Float32) = 1.602f-19 * eV
 eV2J(eV::Real) = eV2J(Float32(eV))
+
+"""
+amu2kg(m)
+-------------------------------------------------------------------------------------------
+
+# OBJECTIVE:
+- Conversion from amu (atomic mass units) to kg
+
+# INPUTS:
+- `m::Real` -> Mass in amu
+"""
+amu2kg(m::Integer) = 1.66054e-27 * m
+amu2kg(m::Real) = amu2kg(Int(m))
+
+"""
+`mass_dict`: Masses corresponding to the species in mass_species
+"""
+const mass_dict = (amu2kg(1), amu2kg(1), amu2kg(2), amu2kg(16), amu2kg(17), 
+                   amu2kg(18), amu2kg(33), amu2kg(34), amu2kg(4), amu2kg(20))
 
 """
     get_photodestruction_rates(species, solar_activity, dist_to_sun)

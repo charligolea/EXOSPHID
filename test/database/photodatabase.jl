@@ -262,7 +262,7 @@ end
         @test length(EXOSPHID.mass_species) == length(EXOSPHID.mass_dict)
     end
     @testset verbose=false "Masses are positive and within expected range" begin
-        @test all(0 .<= EXOSPHID.mass_dict .<= 300*EXOSPHID.m_fund)
+        @test all(0 .<= EXOSPHID.mass_dict .<= EXOSPHID.amu2kg(100))
     end
     @testset "get_masses returns numeric values" begin
         for sp in exosphid_species
