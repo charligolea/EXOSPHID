@@ -24,7 +24,7 @@ Developed by **Carlos Gómez de Olea Ballester** at **TU Munich, Professorship o
 
 ## ✨ Overview
 This repository provides a modular framework to study **photochemical loss pathways** of neutral and ionic species in surface-bounded exospheres of airless bodies.  
-Currently, the code supports **9 atomic and molecular species** (`H₂O`, `OH`, `H₂`, `H`, `H⁻`, `HO₂`, `H₂O₂`, `He`, `Ne`) with rates derived from literature and the thesis work.  
+Currently, the code supports **10 exospheric species** (`H₂O`, `OH`, `H₂`, `H`, `H⁻`, `HO₂`, `H₂O₂`, `He`, `Ne`, `Ar`) with rates derived from literature and the thesis work.  
 
 Any chemical species may be added by following the methodology described in the [`methods/`](methods/) subfolder.
 
@@ -81,6 +81,7 @@ Extensive documentation is available in the [`EXOSPHID WIKI`](https://github.com
 │   │   ├── H(-).jl
 │   │   ├── He.jl
 │   │   ├── Ne.jl
+│   │   ├── Ar.jl
 │   │   ├── HO2.jl
 │   │   ├── H2O2.jl
 │   │   └── general_construct.jl
@@ -147,7 +148,7 @@ photodestruction(0, 1e10, "H2O", 550, nothing)
 - **Inputs**:
   - `solar_activity` : Ratio of solar activity from 0.0 to 1.0, where 0.0 corresponds to Quiet Sun (QS) conditions, and 1.0 is for the Active Sun (AS)
   - `dt` : Simulation time window [s]
-  - `parent_type` : `"H2O"`, `"OH"`, `"H2"`, `"H"`, `"H(-)"`, `"HO2"`, `"H2O2"`, `"He"`, `"Ne"`
+  - `parent_type` : `"H2O"`, `"OH"`, `"H2"`, `"H"`, `"H(-)"`, `"HO2"`, `"H2O2"`, `"He"`, `"Ne"`, `"Ar"`
   - `parent_velocity`: Parent velocity [m/s]. Can be given as scalar, or as 3D array (preferably Tuple).
   - `sun_tuple`: Solar vector. May be given as 3D array (preferably Tuple), or as `nothing`.
 

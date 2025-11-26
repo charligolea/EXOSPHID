@@ -5,7 +5,7 @@
 """
 `exosphid_species`: atomic and moelcular species included in the EXOSPHID model
 """
-const exosphid_species = ("H2O", "OH", "H2", "H", "H(-)", "HO2", "H2O2", "He", "Ne")
+const exosphid_species = ("H2O", "OH", "H2", "H", "H(-)", "HO2", "H2O2", "He", "Ne", "Ar")
 
 """
 `c`: Speed of light in m/s
@@ -21,7 +21,7 @@ const m_el = 9.1093837e-31           # Electron mass in kg
 `mass_species`: Relevant atomic / molecular species that appear either as parent or daughter 
     products in the EXOSPHID database
 """
-const mass_species = ("H", "H(-)", "H2", "O", "OH", "H2O", "HO2", "H2O2", "He", "Ne")
+const mass_species = ("H", "H(-)", "H2", "O", "OH", "H2O", "HO2", "H2O2", "He", "Ne", "Ar")
 
 
 """
@@ -78,7 +78,7 @@ amu2kg(m::Real) = amu2kg(Int(m))
 `mass_dict`: Masses corresponding to the species in mass_species
 """
 const mass_dict = (amu2kg(1), amu2kg(1), amu2kg(2), amu2kg(16), amu2kg(17), 
-                   amu2kg(18), amu2kg(33), amu2kg(34), amu2kg(4), amu2kg(20))
+                   amu2kg(18), amu2kg(33), amu2kg(34), amu2kg(4), amu2kg(20), amu2kg(40))
 
 """
     get_photodestruction_rates(species, solar_activity, dist_to_sun)
@@ -217,6 +217,8 @@ function get_species_photochemical_info(parent_type::String)
         return He
     elseif parent_type == "Ne"
         return Ne
+    elseif parent_type == "Ar"
+        return Ne
     end
     throw(ArgumentError("Invalid parent species: $parent_type"))
 end
@@ -340,7 +342,7 @@ get_wavelength_range(ph_info::Species) = ph_info.wavelength_range
     Valid values: "H2O", "OH", "OH(X2π)", "OH(A2Σ+)", "OH(1Σ+)", "OH(12Δ/22Π)", 
                   "OH(A2Σ+, v'=2)", "OH(A2Σ+, v'=3)", "OH(B2Σ)", "OH(D2Σ)", 
                   "O", "O(3P)", "O(1D)", "O(1S)", "H2", "H(1s)", "H(2s,2p)", "H", 
-                  "H(-)", "HO2", "H2O2", "He", "Ne"
+                  "H(-)", "HO2", "H2O2", "He", "Ne", "Ar"
 
 # OUTPUTS:
 - `energy::Float32` -> Vibro-rotational energy in Joules
@@ -372,7 +374,7 @@ function get_vibrorotational_energy(species::String)
         energy = eV2J(0.30f0)
     elseif species in ("O", "O(3P)", "O(1D)", "O(1S)", 
                        "H(1s)", "H(2s,2p)" , "H" , "H(-)",
-                       "He", "Ne")
+                       "He", "Ne", "Ar")
         energy = eV2J(0.0f0)
     elseif species == "HO2"
         energy = eV2J(0.43f0)
