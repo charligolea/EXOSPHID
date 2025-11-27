@@ -37,7 +37,7 @@ println("TESTING SimplePhotoionisation.jl ............... ")
 
         vps = Dict("H2O" => 590.0, "OH" => 605.0, "H2" => 1750.0, "H" => 2500.0, 
                    "H(-)"=> 2500.0, "HO2" => 425.0, "H2O2" => 435.0, 
-                   "He" => 1250.0, "Ne" => 560.0)
+                   "He" => 1250.0, "Ne" => 560.0, "Ar" => 395.0)
 
         num_reactions = 10_000
         sa = 0
@@ -167,7 +167,7 @@ println("TESTING SimplePhotoionisation.jl ............... ")
 
         vps = Dict("H2O" => 590.0, "OH" => 605.0, "H2" => 1750.0, "H" => 2500.0, 
                    "H(-)"=> 2500.0, "HO2" => 425.0, "H2O2" => 435.0, 
-                   "He" => 1250.0, "Ne" => 560.0)
+                   "He" => 1250.0, "Ne" => 560.0, "Ar" => 395.0)
 
         num_reactions = 10_000
         sa = 0
@@ -254,11 +254,11 @@ println("TESTING SimplePhotoionisation.jl ............... ")
 
     end
 
-    @testset verbose=true "multiple_photoionisation() output type and size" begin
+    @testset verbose=false "multiple_photoionisation() output type and size" begin
 
         vps = Dict("H2O" => 590.0, "OH" => 605.0, "H2" => 1750.0, "H" => 2500.0, 
                    "H(-)"=> 2500.0, "HO2" => 425.0, "H2O2" => 435.0, 
-                   "He" => 1250.0, "Ne" => 560.0)
+                   "He" => 1250.0, "Ne" => 560.0, "Ar" => 395.0)
 
         num_reactions = 10_000
         sa = 0
