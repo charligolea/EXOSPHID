@@ -3,11 +3,11 @@ println("TESTING of solar_database.jl ...............  ")
 @testset verbose=true "solar_database.jl" begin
 
 
-    @testset verbose=true "Wavelength array correctly sorted" begin
+    @testset verbose=false "Wavelength array correctly sorted" begin
         @test issorted(EXOSPHID.solar_wavelength)
     end
 
-    @testset verbose=true "Normalized Solar Flux Database Size" begin
+    @testset verbose=false "Normalized Solar Flux Database Size" begin
         tol = 1e-6
         for pt in exosphid_species
             fq, fa = get_normalized_fluxes(pt)
@@ -27,7 +27,7 @@ println("TESTING of solar_database.jl ...............  ")
     end
 
 
-    @testset verbose=true "Standard Solar Flux Database Size" begin
+    @testset verbose=false "Standard Solar Flux Database Size" begin
         for pt in exosphid_species
             fq, fa = get_standard_fluxes(pt)
 
@@ -40,7 +40,7 @@ println("TESTING of solar_database.jl ...............  ")
         end
     end
 
-    @testset verbose=true "Normalized Fluxes Compatible with Standard Fluxes" begin
+    @testset verbose=false "Normalized Fluxes Compatible with Standard Fluxes" begin
 
         for pt in exosphid_species
             sq, sa = get_standard_fluxes(pt)

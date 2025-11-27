@@ -225,36 +225,39 @@ end
 # TEST 2: Test various functions from photodatabase.jl
 # ─────────────────────────────────────────────────────────────────────────────────────────
 
-@testset verbose = true "is_photoreaction_occuring" begin
-    @test EXOSPHID.is_photoreaction_occuring(rand(Float32), rand(Float32)) isa Bool
-end
+@testset verbose=false "Test functions: is_photoreaction_occuring, get_current_reaction" begin
+    
+    @testset verbose = false "is_photoreaction_occuring" begin
+        @test EXOSPHID.is_photoreaction_occuring(rand(Float32), rand(Float32)) isa Bool
+    end
 
-@testset verbose = true "get_current_reaction" begin
+    @testset verbose = false "get_current_reaction" begin
 
-    for parent_type in exosphid_species
-        @testset verbose=false "$parent_type database" begin
+        for parent_type in exosphid_species
+            @testset verbose=false "$parent_type" begin
 
-            photo_info = get_species_photochemical_info(parent_type)
+                photo_info = get_species_photochemical_info(parent_type)
 
-            @testset verbose=false "Photons with wvl in relevant range trigger reaction" begin
-            
-                p_wvl = photo_info.wvl_threshold * (1.f0+rand(Float32)) # Photon wavelength higher than threshold
-                @testset verbose=false "No reaction if wvl > threshold" begin
-                    @test get_current_reaction(p_wvl, photo_info) == ("", "", Integer[], ())
-                end
-
-                p_wvl = rand() * photo_info.wvl_threshold # Photon wavelength lower than threshold
-                @testset verbose=false "Yes reaction if wvl < threshold AND in relevant wvl_range" begin
-                    if any(r -> r[1] <= p_wvl <= r[2], photo_info.wavelength_range)
-                        @test get_current_reaction(p_wvl, photo_info) != ("", "", Integer[], ())
-                    else
+                @testset verbose=false "Photons with wvl in relevant range trigger reaction" begin
+                
+                    p_wvl = photo_info.wvl_threshold * (1.f0+rand(Float32)) # Photon wavelength higher than threshold
+                    @testset verbose=false "No reaction if wvl > threshold" begin
                         @test get_current_reaction(p_wvl, photo_info) == ("", "", Integer[], ())
+                    end
+
+                    p_wvl = rand() * photo_info.wvl_threshold # Photon wavelength lower than threshold
+                    @testset verbose=false "Yes reaction if wvl < threshold AND in relevant wvl_range" begin
+                        if any(r -> r[1] <= p_wvl <= r[2], photo_info.wavelength_range)
+                            @test get_current_reaction(p_wvl, photo_info) != ("", "", Integer[], ())
+                        else
+                            @test get_current_reaction(p_wvl, photo_info) == ("", "", Integer[], ())
+                        end
                     end
                 end
             end
         end
+        
     end
-    
 end
 
 @testset verbose = false "Species masses" begin
