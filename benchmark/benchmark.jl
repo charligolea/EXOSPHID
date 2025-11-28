@@ -6,17 +6,6 @@ if !isdefined(Main, :EXOSPHID)
     using .EXOSPHID
 end
 
-"""
-    const velocities
-
-- Sample values of parent velocities for the different EXOSPHID species.
-- Determined from thermal velocity distributions for an assumed temperature of 250 K 
-    (average for the Moon)
-"""
-const velocities = Dict("H2O" => 590, "OH" => 605, "H2" => 1750, "H" => 2500, 
-                        "H(-)"=> 2500, "HO2" => 425, "H2O2" => 435, 
-                        "He" => 1250, "Ne" => 560, "Ar" => 395)
-
 
 """
     photobenchmark(dt, solar_activity, parent_name)
@@ -34,7 +23,7 @@ const velocities = Dict("H2O" => 590, "OH" => 605, "H2" => 1750, "H" => 2500,
 function photobenchmark(dt::Float32, solar_activity::Float32, parent_name::String)
 
     print("\nStarting Numerical Benchmark for $(parent_name)\n")
-    parent_velocity =  velocities[parent_name]
+    parent_velocity =  EXOSPHID.velocities[parent_name]
 
     bm = @benchmark photodestruction($solar_activity, $dt, $parent_name, 
                                     $parent_velocity, nothing)
@@ -64,7 +53,7 @@ end
 function allocations(dt::Float32, solar_activity::Float32, parent_name::String)
 
     println("\nStarting Allocation Profiler for $(parent_name)\n")
-    parent_velocity = velocities[parent_name]
+    parent_velocity = EXOSPHID.velocities[parent_name]
 
     Profile.clear()
     @profile photodestruction(solar_activity, dt, parent_name, parent_velocity, nothing)
