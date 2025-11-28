@@ -96,6 +96,9 @@ Extensive documentation is available in the [`EXOSPHID WIKI`](https://github.com
 │   │   ├── photodestruction_logic_multiple.jl
 │   │   └── photoreactions.jl
 │   │
+│   ├── speed_distrbutions/     # Example usage
+│   │   └── speed_distrbutions.jl
+│   │
 │   └── test/                   # Testing and validation
 │       ├── run_tests.jl
 │       ├── photoreactions/
