@@ -62,3 +62,9 @@ EXOSPHID.Species
 
 1. Add the new species name wherever species are mentioned.
 2. Ensure the new species file is included in the EXOSPHID project tree.
+
+
+## 7.  [`benchmark.jl`](../benchmark/benchmark.jl) 
+
+1. Run `photobenchmark` function for the new exopsheric species.
+2. Add performance results to [WIKI](https://github.com/charligolea/EXOSPHID/wiki/Performance-&-Benchmark).
