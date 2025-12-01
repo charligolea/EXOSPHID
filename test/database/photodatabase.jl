@@ -1,5 +1,6 @@
-println("TESTING photodatabase.jl ...............")
+using Statistics
 
+println("TESTING photodatabase.jl ...............")
 
 # ─────────────────────────────────────────────────────────────────────────────────────────
 # TEST 1: Validate Structure of Photochemical Database
@@ -227,8 +228,23 @@ end
 
 @testset verbose=false "Test functions: is_photoreaction_occuring, get_current_reaction" begin
     
-    @testset verbose = false "is_photoreaction_occuring" begin
+    @testset verbose = false "is_photoreaction_occuring - type" begin
         @test EXOSPHID.is_photoreaction_occuring(rand(Float32), rand(Float32)) isa Bool
+    end
+
+    @testset "is_photoreaction_occuring - check statistical convergence" begin
+        photo_info = get_species_photochemical_info("H2O")
+        k = photo_info.quiet_rate
+        dt = 1e4
+        N = 100_000  # number of trials
+        
+        results = [EXOSPHID.is_photoreaction_occuring(k, dt) for _ in 1:N]
+        fraction_true = mean(results)  # mean of Bool array gives fraction of trues
+        
+        p_analytical = 1 - exp(-k * dt)
+        
+        # Allow a small statistical tolerance due to randomness
+        @test isapprox(fraction_true, p_analytical; atol=0.001)
     end
 
     @testset verbose = false "get_current_reaction" begin
