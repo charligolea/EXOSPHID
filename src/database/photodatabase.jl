@@ -218,7 +218,7 @@ function get_species_photochemical_info(parent_type::String)
     elseif parent_type == "Ne"
         return Ne
     elseif parent_type == "Ar"
-        return Ne
+        return Ar
     end
     throw(ArgumentError("Invalid parent species: $parent_type"))
 end
