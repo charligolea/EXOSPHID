@@ -21,7 +21,7 @@ const m_el = 9.1093837e-31           # Electron mass in kg
 `mass_species`: Relevant atomic / molecular species that appear either as parent or daughter 
     products in the EXOSPHID database
 """
-const mass_species = ("H", "H(-)", "H2", "O", "OH", "H2O", "HO2", "H2O2", "He", "Ne", "Ar")
+const mass_species = ("H", "H(-)", "H2", "He", "O", "OH", "Ne", "H2O", "HO2", "H2O2", "Ar")
 
 
 """
@@ -77,8 +77,8 @@ amu2kg(m::Real) = amu2kg(Int(m))
 """
 `mass_dict`: Masses corresponding to the species in mass_species
 """
-const mass_dict = (amu2kg(1), amu2kg(1), amu2kg(2), amu2kg(16), amu2kg(17), 
-                   amu2kg(18), amu2kg(33), amu2kg(34), amu2kg(4), amu2kg(20), amu2kg(40))
+const mass_dict = (amu2kg(1), amu2kg(1), amu2kg(2), amu2kg(4), amu2kg(16), amu2kg(17), 
+                   amu2kg(18), amu2kg(20), amu2kg(33), amu2kg(34), amu2kg(40))
 
 """
     get_photodestruction_rates(species, solar_activity, dist_to_sun)
