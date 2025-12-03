@@ -68,3 +68,14 @@ EXOSPHID.Species
 
 1. Run `photobenchmark` function for the new exopsheric species.
 2. Add performance results to [WIKI](https://github.com/charligolea/EXOSPHID/wiki/Performance-&-Benchmark).
+
+
+## References
+
+We recommend consulting the following publications to find the relevant photochemical information to add new species to the `EXOSPHID` framework:
+
+- **Huebner, W. F., Keady, J. J., & Lyon, S. P.** (1992). Solar Photo Rates for Planetary Atmospheres and Atmospheric Pollutants. *Astrophysics and Space Science*, 195, 1–294.  
+  [DOI](https://doi.org/10.1007/BF00644558) | [URL](https://www.researchgate.net/publication/234519282_Solar_Photo_Rates_for_Planetary_Atmospheres_and_Atmospheric_Pollutants)
+  
+- **Huebner, W., & Mukherjee, J.** (2015). Photoionization and photodissociation rates in solar and blackbody radiation fields. *Planetary and Space Science*, 106, 11–45.  
+  [DOI](https://doi.org/10.1016/J.PSS.2014.11.022) | [URL](https://www.sciencedirect.com/science/article/pii/S003206331400381X)
