@@ -35,11 +35,14 @@ Any chemical species may be added by following the methodology described in the 
 ---
 
 ## 📖 Reference
-The theory behind this model and its lunar-specific mechanisms is described in the [`EXOSPHID` WIKI](https://github.com/charligolea/EXOSPHID/wiki) in:  
+
+A preliminary version of `EXOSPHID` was presented in: 
 
 > *Photolysis of Lunar Water in the Exosphere and on the Surface*,  
 > Carlos Gómez de Olea Ballester, TU Munich, 2025.  
 > [Available online](https://mediatum.ub.tum.de/node?id=1784196)  
+
+where the package focused on simplified photochemistry for hydrogen-bearing species in the lunar environment ($H_2, OH, H_2O$).
 
 Further work will appear in **upcoming publications (2026)**.
 
@@ -229,17 +232,6 @@ These scripts include comparisons with published results to ensure reproducibili
   *(contact: a.peschel@tum.de)*
 
 `ExESS` is a comprehensive numerical model of the lunar exosphere that simulates the distribution and behaviour of multiple volatile species.  
-
----
-
-## 📜 Citation
-If you use this code, please cite (ADD JOSS PAPER HERE WHEN AVAILABLE):
-
-```
-Gómez de Olea Ballester, C. (2025). Photolysis of Lunar Water in the Exosphere and on the Surface. 
-Technical University of Munich, Professorship of Lunar and Planetary Exploration.
-Available at: https://mediatum.ub.tum.de/node?id=1784196
-```
 
 ---
 
