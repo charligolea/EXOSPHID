@@ -235,6 +235,15 @@ These scripts include comparisons with published results to ensure reproducibili
 
 ---
 
+## 📜 Citation
+If you use this code, please cite (ADD JOSS PAPER HERE WHEN AVAILABLE):
+
+```
+Gómez de Olea Ballester, C. & Peschel, A. (2026). EXOSPHID: A Julia Package for Simulating Photodissociation and Photoionisation Processes in Solar System Exospheres. 
+```
+
+---
+
 ## 👥 Authors & Contact
 
 For questions, please contact:  
