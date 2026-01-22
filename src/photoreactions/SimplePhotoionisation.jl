@@ -54,7 +54,10 @@ function allocate_velocity_ionisation(reaction::PhotoReaction, E_excess::Real,
 
     # 4. Calculate unitary tuples for electron and product ion
     u_el = random_unit_tuple()
+    u_el = dot(u_el, u_ph) ≥ 0 ? u_el : (-u_el[1], -u_el[2], -u_el[3])
+
     u_ion = random_unit_tuple()
+    u_ion = dot(u_ion, u_ph) ≥ 0 ? u_ion : (-u_ion[1], -u_ion[2], -u_ion[3])
 
     # 5. Calculate speed values for electron and ion
     a = m_el * (m_ion * (dot(u_ion,u_ph)))^2 + 

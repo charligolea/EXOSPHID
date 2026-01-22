@@ -95,7 +95,10 @@ function allocate_velocity_dissociation(reaction::PhotoReaction,
 
     # 4. Calculate unitary vectors for light and heavy products
     u_light = random_unit_tuple()
+    u_light = dot(u_light, u_ph) ≥ 0 ? u_light : (-u_light[1], -u_light[2], -u_light[3])
+
     u_heavy = random_unit_tuple()
+    u_heavy = dot(u_heavy, u_ph) ≥ 0 ? u_heavy : (-u_heavy[1], -u_heavy[2], -u_heavy[3])
 
     # 5. Calculate speed values for light and heavy products
     a = m_light * (m_heavy * (dot(u_heavy,u_ph)))^2 + 
